@@ -1,0 +1,108 @@
+// DIRECT FIX FOR DROPDOWN POSITIONING
+// This is the most targeted solution for the dropdown positioning issue
+
+// Force the overlay container to be positioned correctly
+.cdk-overlay-container {
+  position: fixed !important;
+  z-index: 1000 !important;
+}
+
+// CRITICAL FIX: This is what makes dropdowns appear below their triggers
+.cdk-overlay-connected-position-bounding-box {
+  // This MUST be absolute, not static!
+  position: absolute !important;
+  transform: none !important;
+  display: flex !important;
+  
+  // CRITICAL: Use unset not auto to completely remove position constraints
+  top: unset !important;
+  left: unset !important;
+  
+  // Ensure it's not positioned at the bottom
+  &[style*="bottom"] {
+    bottom: unset !important;
+  }
+  
+  // Force parent positioning for dropdowns
+  .mat-mdc-select-trigger + .cdk-overlay-pane {
+    transform: translateY(100%) translateY(4px) !important;
+    position: absolute !important;
+    top: unset !important;
+    left: 0 !important;
+    right: unset !important;
+    bottom: unset !important;
+  }
+}
+
+// Pane - the actual dropdown container
+.cdk-overlay-pane {
+  position: absolute !important;
+  transform: none !important;
+  min-width: 0 !important;
+  
+  // Override any transform style from anywhere
+  &[style*="transform"] {
+    transform: none !important;
+  }
+  
+  // MAJOR FIX: Target any inline position styles
+  &[style*="position: fixed"],
+  &[style*="position:fixed"],
+  &[style*="position"] {
+    position: absolute !important;
+    bottom: unset !important; // Remove bottom constraint
+    top: unset !important; // Remove top constraint
+    left: unset !important; // Remove left constraint
+    right: unset !important; // Remove right constraint
+  }
+}
+
+// Material select panel - the dropdown content
+.mat-mdc-select-panel {
+  min-width: calc(100% - 10px) !important; /* Account for potential borders/margins */
+  position: relative !important; /* Must be relative */
+  transform: none !important; /* Critical to prevent transforms */
+  margin-top: 4px !important; /* Space between trigger and dropdown */
+  transform-origin: center top !important; /* Origin for any scaling */
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  
+  // Ensure left alignment with trigger
+  left: 0 !important;
+  right: auto !important;
+}
+
+// Form field z-indexing
+.mat-mdc-form-field {
+  position: relative !important;
+  z-index: 1 !important;
+  
+  &.mat-focused {
+    z-index: 1001 !important;
+  }
+}
+
+// Special class for Azure Pipeline Selector
+.azure-pipeline-selector .mat-form-field,
+app-azure-pipeline-selector .mat-form-field {
+  // Force dropdown to appear correctly
+  position: relative !important;
+  
+  .mat-mdc-select-trigger {
+    position: relative !important;
+  }
+}
+
+// THIS IS THE KEY FIX:
+// Override the position of CDK bounding box specifically for mat-selects
+.mat-mdc-select.mat-mdc-select-open + .cdk-overlay-container {
+  .cdk-overlay-connected-position-bounding-box {
+    position: absolute !important;
+    transform: none !important;
+  }
+
+  .cdk-overlay-pane {
+    position: absolute !important;
+    transform: none !important;
+  }
+}

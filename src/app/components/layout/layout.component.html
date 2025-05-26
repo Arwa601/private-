@@ -1,0 +1,23 @@
+<div
+  [class.blueTheme]="isBlueTheme"
+  [class.pinkTheme]="isPinkTheme"
+  [class.greenTheme]="isGreenTheme"
+  [class.darkMode]="isDarkMode"
+  class="app-container"
+>
+  <app-header
+    [isMenuOpened]="isShowSidebar"
+    (toggleSidebarEvent)="toggleSidebar()"
+  ></app-header>
+
+  <div class="main-container" [class.sidebar-open]="isShowSidebar">
+    <div class="sidebar" *ngIf="isShowSidebar">
+      <app-sidebar></app-sidebar>
+    </div>
+
+    <div class="content-area" [class.with-sidebar]="isShowSidebar">
+      <router-outlet></router-outlet>
+      <app-footer></app-footer>
+    </div>
+  </div>
+</div>

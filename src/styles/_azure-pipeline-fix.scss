@@ -1,0 +1,112 @@
+// Immediate fix for Azure Pipeline Selector dropdowns
+// This very specific solution targets only the dropdown issue
+
+// Target the component directly
+app-azure-pipeline-selector {
+  display: block;
+  position: relative;
+  z-index: 100; // Higher z-index to ensure visibility
+  
+  // Force Material form fields to establish positioning context
+  .mat-mdc-form-field {
+    position: relative !important;
+    display: block;
+    width: 100%;
+    
+    // CRITICAL: Add positioning context
+    .mat-mdc-text-field-wrapper {
+      position: relative;
+    }
+    
+    // When the select is open, increase z-index significantly
+    &:has(.mat-mdc-select-open) {
+      z-index: 1050 !important; // Much higher to ensure visibility
+    }
+  }
+  
+  // Prevent any transforms that might cause positioning issues
+  .mat-mdc-form-field-infix {
+    transform: none !important;
+    display: block !important; // Ensures proper width inheritance
+  }
+  
+  // Target the select trigger directly
+  .mat-mdc-select-trigger {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    
+    // Force association with dropdown when open
+    &:has(.mat-mdc-select-arrow-wrapper) {
+      z-index: 1050; // Match z-index with open state
+    }
+  }
+  
+  // Force dropdowns to appear below their selectors
+  ::ng-deep .cdk-overlay-container {
+    .cdk-overlay-connected-position-bounding-box {
+      position: absolute !important;
+      transform: none !important;
+      top: unset !important; // CRITICAL: Remove top constraint
+      left: unset !important; // CRITICAL: Remove left constraint
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .cdk-overlay-pane {
+      position: absolute !important;
+      transform: none !important;
+      top: unset !important; // CRITICAL: Remove top constraint
+      left: unset !important; // CRITICAL: Remove left constraint
+      margin: 0 !important;
+      transform-origin: unset !important;
+    }
+    
+    .mat-mdc-select-panel {
+      margin-top: 4px !important;
+      transform: none !important;
+      position: relative !important; // MUST BE relative
+    }
+  }
+}
+
+// Direct fix for position styles
+.cdk-global-overlay-wrapper {
+  position: absolute !important;
+}
+
+// Target the custom-select-panel class used in the component
+::ng-deep .custom-select-panel {
+  position: relative !important;
+  margin-top: 4px !important;
+  transform: none !important;
+}
+
+// Target the special class we're adding to these dropdowns
+.azure-pipeline-dropdown {
+  transform: none !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  margin-top: 4px !important;
+  
+  // Style tweaks for better appearance
+  .mat-mdc-option {
+    height: auto !important;
+    line-height: 1.4 !important;
+    padding: 10px 16px !important;
+  }
+}
+
+// Force CDK overlay positioning for these specific dropdowns
+.cdk-overlay-pane:has(.azure-pipeline-dropdown) {
+  position: absolute !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+  margin-top: 0 !important;
+}
+
+// In case we're in a dialog or other stacked context, ensure visibility
+.azure-pipeline-selector {
+  z-index: 20 !important;
+}

@@ -1,0 +1,206 @@
+<!-- Simple Pipeline Selector Component -->
+<div class="container mt-4">
+  <div class="row">
+    <!-- Lef          <a *ngIf="currentExecution?.runId" 
+             [routerLink]="['/app/dashboard/overview']" 
+             [queryParams]="{build_id: currentExecution?.runId}"
+             class="btn btn-success">
+            <i class="bi bi-bar-chart me-2"></i>View in Dashboard
+          </a>mn: Pipeline Control -->
+    <div class="col-md-5 mb-4">
+      <h2>Trigger Azure DevOps Pipeline</h2>
+      <p class="text-muted mb-4">Select a project and pipeline to trigger a build</p>
+
+      <!-- Project Selection -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="form-group mb-4">
+            <label for="projectSelect" class="form-label fw-bold">Project</label>
+            <select id="projectSelect" class="form-select" (change)="onProjectSelect($event)">
+              <option value="">Select a project</option>
+              <option *ngFor="let project of azureProjects" [value]="project.Id">
+                {{project.Name}}
+              </option>
+            </select>
+          </div>
+
+          <!-- Pipeline Selection -->
+          <div class="form-group mb-4">
+            <label for="pipelineSelect" class="form-label fw-bold">Pipeline</label>
+            <select id="pipelineSelect" class="form-select" 
+                    (change)="onPipelineSelectForRunner($event)"
+                    [disabled]="!selectedProject">
+              <option value="">Select a pipeline</option>
+              <option *ngFor="let pipeline of selectedProjectPipelines[selectedProject?.Id || ''] || []" 
+                      [value]="pipeline.Id">
+                {{pipeline.Name}}
+              </option>
+            </select>
+          </div>
+
+          <!-- Schedule Options -->
+          <form [formGroup]="schedulePipelineForm" class="mt-4 mb-4">
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" 
+                     id="scheduleEnabled" formControlName="scheduleEnabled">
+              <label class="form-check-label" for="scheduleEnabled">
+                Schedule for later execution
+              </label>
+            </div>
+            
+            <div *ngIf="isScheduleEnabled" class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="scheduledDate" class="form-label">Date</label>
+                <input type="date" class="form-control" id="scheduledDate" 
+                       formControlName="scheduledDate">
+                <small class="text-danger" 
+                       *ngIf="schedulePipelineForm.get('scheduledDate')?.invalid && schedulePipelineForm.get('scheduledDate')?.touched">
+                  Date is required
+                </small>
+              </div>
+              <div class="col-md-6">
+                <label for="scheduledTime" class="form-label">Time</label>
+                <input type="time" class="form-control" id="scheduledTime" 
+                       formControlName="scheduledTime">
+                <small class="text-danger" 
+                       *ngIf="schedulePipelineForm.get('scheduledTime')?.invalid && schedulePipelineForm.get('scheduledTime')?.touched">
+                  Time is required
+                </small>
+              </div>
+            </div>
+          </form>
+
+          <!-- Run Button -->
+          <div class="mt-4">            
+            <button class="btn btn-primary w-100" 
+                    [disabled]="!selectedProject || !selectedPipeline || (pipelineStatus | async)?.isRunning || 
+                               (isScheduleEnabled && schedulePipelineForm.invalid)"
+                    (click)="triggerPipeline()">
+              <i class="bi bi-play-fill me-2"></i>
+              {{isScheduleEnabled ? 'Schedule Pipeline' : 'Run Pipeline Now'}}
+            </button>
+          </div>
+        </div>
+      </div>      <!-- Pipeline Status Section (Configuration section removed) -->
+      
+      <!-- Pipeline Status with Bootstrap Spinner -->
+      <div *ngIf="(pipelineStatus | async)?.isRunning" class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white">
+          Pipeline Execution Status
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <div class="spinner-border text-primary me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>Current Stage: {{(pipelineStatus | async)?.currentStage || 'Initializing'}}</span>
+          </div>
+          <div class="text-end mt-2 text-muted">
+            <small>Progress: {{(pipelineStatus | async)?.progress || 0}}%</small>
+          </div>
+        </div>
+      </div>
+          <!-- Status Message -->
+      <div *ngIf="statusMessage" [class]="'alert ' + (statusMessage.includes('Failed') || statusMessage.includes('Warning') ? 'alert-danger' : 'alert-success')" role="alert">
+        {{statusMessage}}
+      </div>
+      
+      <!-- Download Report & Dashboard Navigation Buttons - show when pipeline completes -->
+      <ng-container *ngIf="pipelineStatus | async as status">
+        <div *ngIf="status.currentStage && (status.currentStage.toLowerCase().includes('complete') || status.currentStage.toLowerCase().includes('ready'))" class="mt-3">
+          <button class="btn btn-primary me-2" (click)="downloadHtmlReport()" [disabled]="!currentExecution">
+            <i class="bi bi-download me-2"></i>Download HTML Report
+          </button>          <a *ngIf="currentExecution?.runId" 
+             [routerLink]="['/app/dashboard/overview']" 
+             [queryParams]="{build_id: currentExecution?.runId}"
+             class="btn btn-success">
+            <i class="bi bi-bar-chart me-2"></i>View in Dashboard
+          </a>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Right Column: Test Results -->
+    <div class="col-md-7">
+      <div class="card">        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Test Results Summary</h5>
+          <div>
+            <button class="btn btn-outline-secondary btn-sm" (click)="refreshTestResults()"
+                   [disabled]="!currentExecution">
+              <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+            </button>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <ng-container *ngIf="currentTestResults as results; else noResults">
+            <!-- Test Summary Stats -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Passed</h6>
+                    <h3>{{results.passedCount || 0}}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Failed</h6>
+                    <h3>{{results.failedCount || 0}}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Skipped</h6>
+                    <h3>{{results.skippedCount || 0}}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Total</h6>
+                    <h3>{{results.totalCount || 0}}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Test Details Table -->
+            <div class="table-responsive mt-3" *ngIf="results.details?.length">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>Scenario</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let test of results.details" [class]="getTestRowClass(test.status)">
+                    <td>{{test.featureName}}</td>
+                    <td>{{test.scenario}}</td>
+                    <td><span [class]="getTestStatusBadgeClass(test.status)">{{test.status}}</span></td>
+                    <td>{{test.duration | number:'1.0-2'}}s</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ng-container>
+
+          <ng-template #noResults>
+            <div class="text-center py-5">
+              <i class="bi bi-clipboard-data fs-1 text-muted mb-3"></i>
+              <p class="text-muted">No test results available yet.<br>Run a pipeline to see test results.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

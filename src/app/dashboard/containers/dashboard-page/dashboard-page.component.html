@@ -1,0 +1,102 @@
+<mat-card class="card">
+  <mat-toolbar class="page-header" role="heading">
+    <div class="title-inner-wrapper">
+      <p class="title-text">Test Results Dashboard</p>
+    </div>
+  </mat-toolbar>
+</mat-card>
+
+
+
+<mat-card class="results-card">
+  <mat-card-header>
+    <mat-card-title>Test Results Summary</mat-card-title>
+    <div class="header-actions">
+      <button mat-raised-button color="accent" class="trigger-btn" (click)="triggerPipeline()" [disabled]="isLoading">
+        <mat-icon>play_arrow</mat-icon>
+        Run Tests
+      </button>
+      <button mat-raised-button color="primary" (click)="loadTestResults()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Refresh Results
+      </button>
+    </div>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="summary-stats">
+      <div class="stat-box passed clickable" [class.active]="statusFilter === 'PASSED'" (click)="filterByStatus('PASSED')">
+        <div class="stat-value">{{ passedTestsCount }}</div>
+        <div class="stat-label">Passed</div>
+      </div>
+      <div class="stat-box failed clickable" [class.active]="statusFilter === 'FAILED'" (click)="filterByStatus('FAILED')">
+        <div class="stat-value">{{ failedTestsCount }}</div>
+        <div class="stat-label">Failed</div>
+      </div>
+      <div class="stat-box total clickable" [class.active]="statusFilter === 'ALL'" (click)="filterByStatus('ALL')">
+        <div class="stat-value">{{ totalTestsCount }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="loading-text">Loading test results...</p>
+    </div>
+
+    <div *ngIf="error" class="error-container">
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+      <button mat-stroked-button color="primary" (click)="loadTestResults()">
+        <mat-icon>refresh</mat-icon>
+        Try Again
+      </button>
+    </div>
+
+    <div *ngIf="!isLoading && !error" class="table-container">
+      <mat-form-field class="filter-field">
+        <mat-label>Filter results</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Type to search" #input>
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      
+      <table mat-table [dataSource]="dataSource" matSort class="results-table">
+        <!-- Feature Column -->
+        <ng-container matColumnDef="feature">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Feature</th>
+          <td mat-cell *matCellDef="let result">{{ result.feature }}</td>
+        </ng-container>
+
+        <!-- Scenario Column -->
+        <ng-container matColumnDef="scenario">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Scenario</th>
+          <td mat-cell *matCellDef="let result">{{ result.scenario }}</td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let result">
+            <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Exception Type Column -->
+        <ng-container matColumnDef="exceptionType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Type</th>
+          <td mat-cell *matCellDef="let result">{{ result.exceptionType || '-' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [ngClass]="{'failed-row': row.status === 'FAILED', 'passed-row': row.status === 'PASSED'}"
+            [matTooltip]="row.exceptionMessage" 
+            [matTooltipDisabled]="!row.exceptionMessage"
+            (click)="viewTestDetails(row)"
+            class="clickable-row"></tr>
+      </table>
+
+      <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-card-content>
+</mat-card>

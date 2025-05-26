@@ -1,0 +1,92 @@
+// Variables
+$sidebar-width: 250px;
+$sidebar-width-collapsed: 80px;
+$header-height: 64px;
+$footer-height: 48px;
+$main-padding: 20px;
+$small-spacing: 8px;
+$medium-spacing: 16px;
+$large-spacing: 24px;
+
+// Font sizes
+$fs-tiny: 10px;
+$fs-small: 12px;
+$fs-normal: 14px;
+$fs-medium: 16px;
+$fs-large: 18px;
+$fs-xl: 24px;
+$fs-xxl: 32px;
+
+// Footer variables
+$footer-icon-background-color: rgba(0, 0, 0, 0.05);
+$footer-icon-background-color-hover: rgba(0, 0, 0, 0.1);
+$footer-font-color: rgba(0, 0, 0, 0.6);
+$footer-icon-color: #757575;
+
+// Sidebar variables
+$sidebar-icon-color: #757575;
+$sidebar-title-color: #616161;
+$sidebar-circle-color: #1976d2;
+$sidebar-border-color: #e0e0e0;
+$sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+$sidebar-active-bg: rgba(0, 0, 0, 0.08);
+
+// Theme colors
+// Blue theme
+$blue-primary: #1976d2;
+$blue-light: #63a4ff;
+$blue-dark: #004ba0;
+$blue-accent: #ff4081;
+
+// Pink theme
+$pink-primary: #e91e63;
+$pink-light: #ff6090;
+$pink-dark: #b0003a;
+$pink-accent: #2196f3;
+
+// Green theme
+$green-primary: #4caf50;
+$green-light: #80e27e;
+$green-dark: #087f23;
+$green-accent: #ff5722;
+
+// Dark mode colors
+$dark-bg: #121212;
+$dark-card-bg: #1e1e1e;
+$dark-text: #e0e0e0;
+$dark-border: #333;
+$dark-hover: #2c2c2c;
+
+// Media queries
+$small: 576px;
+$medium: 768px;
+$large: 992px;
+$xlarge: 1200px;
+
+// Layout variables
+$toolbar-padding: 24px;
+$normal: 992px;
+
+// Z-indices
+$z-sidebar: 100;
+$z-header: 200;
+$z-overlay: 300;
+$z-dropdown: 400;
+$z-modal: 500;
+$z-tooltip: 600;
+
+// Animation durations
+$duration-fast: 0.2s;
+$duration-medium: 0.3s;
+$duration-slow: 0.5s;
+
+// Shadows
+$shadow-light: 0 2px 5px rgba(0, 0, 0, 0.1);
+$shadow-medium: 0 4px 10px rgba(0, 0, 0, 0.15);
+$shadow-heavy: 0 8px 20px rgba(0, 0, 0, 0.2);
+
+// Border radius
+$border-radius-small: 4px;
+$border-radius-medium: 8px;
+$border-radius-large: 16px;
+$border-radius-circle: 50%;

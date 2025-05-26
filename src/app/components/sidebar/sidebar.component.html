@@ -1,0 +1,25 @@
+<mat-list class="sidebar">
+  <!-- Common menu items for all users -->
+  <mat-list-item routerLink="/app/dashboard" routerLinkActive="active">
+    <mat-icon>home</mat-icon> Dashboard
+  </mat-list-item>
+
+  <!-- Admin-only menu items -->
+  <ng-container *ngIf="isAdmin">
+    <mat-list-item routerLink="/app/users" routerLinkActive="active">
+      <mat-icon>people</mat-icon> Users
+    </mat-list-item>
+
+    <mat-list-item routerLink="/app/add-member" routerLinkActive="active">
+      <mat-icon>person_add</mat-icon> Add Member
+    </mat-list-item>
+  </ng-container>
+
+  <mat-list-item routerLink="/app/dashboard/azure-devops" routerLinkActive="active">
+    <mat-icon>cloud</mat-icon> Azure DevOps
+  </mat-list-item>
+
+  <mat-list-item routerLink="/app/profile" routerLinkActive="active">
+    <mat-icon>account_circle</mat-icon> Profile
+  </mat-list-item>
+</mat-list>

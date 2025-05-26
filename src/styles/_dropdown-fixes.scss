@@ -1,0 +1,141 @@
+// Global fixes for Material dropdown positioning issues
+// This ensures dropdown menus appear correctly below their selectors
+
+// Fix for the CDK overlay container which handles all dropdowns
+.cdk-overlay-container {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+// Ensure the connected overlay is positioned correctly
+.cdk-overlay-connected-position-bounding-box {
+  position: absolute !important;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+
+  &.cdk-overlay-connected-position-bound {
+    // Ensure proper positioning relative to the trigger
+    width: auto !important;
+  }
+}
+
+// More specific position fixes
+.cdk-overlay-connected-position-bounding-box.cdk-overlay-connected-position-bounding-box {
+  transform: none !important;
+  position: absolute !important; /* Must be absolute for proper positioning */
+  transform-origin: unset !important;
+}
+
+// Style for the dropdown panel
+.cdk-overlay-pane {
+  position: absolute !important;
+  pointer-events: auto;
+  box-sizing: border-box;
+  z-index: 1000;
+  display: flex;
+  max-width: 100%;
+  max-height: 100%;
+  transform: none !important; /* No transform at all */
+}
+
+// Specific styles for Material select panels
+.mat-mdc-select-panel {
+  min-width: fit-content !important;
+  max-width: 100% !important;
+  max-height: 256px !important;
+  overflow: auto;
+  position: relative !important; /* CHANGED BACK to relative - static breaks positioning */
+  box-sizing: border-box;
+  transform: none !important;
+  margin-top: 4px !important;
+}
+
+// Ensure panels position correctly
+.cdk-overlay-pane mat-select-panel,
+.cdk-overlay-pane .mat-mdc-select-panel {
+  margin-top: 4px !important;
+  position: relative !important;
+  transform: none !important;
+}
+
+// Fix Bootstrap/Material integration issues with z-index
+.mat-mdc-form-field {
+  position: relative;
+  z-index: 1;
+}
+
+// When a form field is active/focused, ensure it stays above others
+.mat-focused {
+  z-index: 2;
+}
+
+// Ensure panels appear directly below their mat-form-field
+.mat-mdc-form-field.mat-mdc-form-field-type-mat-select:has(.mat-select-trigger) {
+  display: block;
+  
+  .mat-mdc-text-field-wrapper {
+    width: 100%;
+  }
+}
+
+// Prevent overlay transforms that might cause positioning issues
+.cdk-overlay-pane.mat-mdc-select-panel-above .mat-mdc-select-panel,
+.cdk-overlay-pane .mat-mdc-select-panel {
+  transform: none !important;
+  margin-top: 4px !important;
+}
+
+// Additional position fixes
+.dropdown-fixed-container {
+  .cdk-overlay-pane {
+    position: absolute !important;
+    transform: none !important;
+    margin-top: 4px !important;
+  }
+}
+
+// Force correct position for dropdowns
+.mat-mdc-select-panel {
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+  margin-top: 4px !important;
+  transform: none !important;
+}
+
+// Add a custom position class
+.position-fix .mat-mdc-select-panel {
+  transform: none !important;
+}
+
+// Apply additional positioning styles
+.cdk-overlay-connected-position-bounding-box {
+  // This prevents the bounding box from being positioned at the bottom of the page
+  // Don't use auto as it may cause issues
+  top: unset !important;
+  left: unset !important;
+}
+
+// Fix panel width and position for mat-select
+.mat-mdc-select {
+  width: 100%;
+  
+  &.mat-mdc-select-opened .mat-mdc-select-trigger {
+    // Fix z-index when opened
+    z-index: 1001;
+  }
+}
+
+// Panel class helper
+.position-fix {
+  // Ensure proper panel positioning
+  position: absolute !important;
+  top: unset !important;
+  left: unset !important;
+}

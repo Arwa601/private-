@@ -1,0 +1,194 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  &.blueTheme {
+    --primary-color: #1976d2;
+    --primary-light: #63a4ff;
+    --primary-dark: #004ba0;
+    --accent-color: #ff4081;
+  }
+
+  &.pinkTheme {
+    --primary-color: #e91e63;
+    --primary-light: #ff6090;
+    --primary-dark: #b0003a;
+    --accent-color: #2196f3;
+  }
+
+  &.greenTheme {
+    --primary-color: #4caf50;
+    --primary-light: #80e27e;
+    --primary-dark: #087f23;
+    --accent-color: #ff5722;
+  }
+
+  &.darkMode {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --border-color: #333;
+    --hover-bg: #2c2c2c;
+
+    background-color: var(--bg-color);
+    color: var(--text-color);
+
+    .sidebar {
+      background-color: var(--card-bg);
+      border-right-color: var(--border-color);
+    }
+
+    .content-area {
+      background-color: var(--bg-color);
+    }
+
+    app-header {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+    }
+
+    app-footer {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+    }
+  }
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  margin-top: 72px; /* Adjust for fixed header */
+  position: relative;
+  height: calc(100vh - 72px); /* Full height minus header */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  
+  &.sidebar-open {
+    .content-area {
+      margin-left: 240px;
+      width: calc(100% - 240px);
+      
+      @media (max-width: 768px) {
+        margin-left: 218px;
+        width: calc(100% - 218px);
+      }
+    }
+  }
+  
+  &:not(.sidebar-open) {
+    .content-area {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+}
+
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  height: calc(100vh - 64px); /* Adjust for header height */
+  overflow-y: auto;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: white;
+  transition: width 0.3s ease, transform 0.3s ease;
+  position: fixed;
+  left: 0;
+  top: 64px; /* Header height */
+  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+
+  /* Add scrollbar styling */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 768px) {
+    width: 218px;
+    min-width: 218px;
+  }
+}
+
+.content-area {
+  flex: 1;
+  padding: 24px;
+  min-height: calc(100vh - 64px - 56px); /* Adjust for header and footer */
+  transition: margin-left 0.3s ease;
+  margin-top: 64px; /* Header height */
+  background-color: #f8f9fa;
+
+  &.with-sidebar {
+    margin-left: 280px; /* Match sidebar width */
+  }
+  
+  @media (max-width: 1024px) {
+    &.with-sidebar {
+      margin-left: 0;
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .main-container {
+    overflow-x: hidden;
+  }
+  
+  .sidebar {
+    width: 240px;
+    left: 0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transform: translateX(-100%);
+    z-index: 980;
+  }
+  
+  .sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* On mobile, sidebar shows as an overlay */
+  .main-container.sidebar-open:after {
+    content: '';
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 970;
+  }
+  
+  /* Reset content area when in mobile view */
+  .content-area, .main-container.sidebar-open .content-area {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Adjust for screen sizes between tablet and mobile */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .main-container.sidebar-open .content-area.with-sidebar {
+      margin-left: 240px;
+      width: calc(100% - 240px);
+    }
+  }
+
+  // Add overlay when sidebar is open on mobile
+  .sidebar-open-mobile::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+  }
+}

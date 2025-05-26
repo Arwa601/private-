@@ -1,0 +1,214 @@
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">      <div>
+        <h2 class="mb-3">Add New Member</h2>
+        <p class="text-muted">Configure access permissions for Azure DevOps projects and pipelines</p>
+      </div>
+      <a routerLink="/app/users" class="btn btn-outline-secondary d-flex align-items-center">
+        <i class="bi bi-arrow-left me-2"></i>Back to Users
+      </a>
+    </div>
+  </div>
+
+  <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="needs-validation">
+    <!-- Personal Information Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h4 class="mb-0">Personal Information</h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label for="Firstname" class="form-label">First Name <span class="text-danger">*</span></label>
+              <input type="text" 
+                     class="form-control" 
+                     id="Firstname" 
+                     formControlName="Firstname" 
+                     [class.is-invalid]="memberForm.get('Firstname')?.invalid && memberForm.get('Firstname')?.touched"
+                     required>
+              <div class="invalid-feedback" 
+                   *ngIf="memberForm.get('Firstname')?.invalid && memberForm.get('Firstname')?.touched">
+                First name is required
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label for="Lastname" class="form-label">Last Name <span class="text-danger">*</span></label>
+              <input type="text" 
+                     class="form-control" 
+                     id="Lastname" 
+                     formControlName="Lastname" 
+                     [class.is-invalid]="memberForm.get('Lastname')?.invalid && memberForm.get('Lastname')?.touched"
+                     required>
+              <div class="invalid-feedback" 
+                   *ngIf="memberForm.get('Lastname')?.invalid && memberForm.get('Lastname')?.touched">
+                Last name is required
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label for="Email" class="form-label">Email Address <span class="text-danger">*</span></label>
+              <input type="email" 
+                     class="form-control" 
+                     id="Email" 
+                     formControlName="Email" 
+                     [class.is-invalid]="memberForm.get('Email')?.invalid && memberForm.get('Email')?.touched"
+                     required>
+              <div class="invalid-feedback" 
+                   *ngIf="memberForm.get('Email')?.invalid && memberForm.get('Email')?.touched">
+                Please enter a valid email address
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label for="Role" class="form-label">Role <span class="text-danger">*</span></label>
+              <select class="form-select" 
+                      id="Role" 
+                      formControlName="Role" 
+                      [class.is-invalid]="memberForm.get('Role')?.invalid && memberForm.get('Role')?.touched"
+                      required>
+                <option value="">Select a role</option>
+                <option value="3">QA Engineer</option>
+                <option value="2">QA Lead</option>
+                <option value="1">Product Owner</option>
+              </select>
+              <div class="invalid-feedback" 
+                   *ngIf="memberForm.get('Role')?.invalid && memberForm.get('Role')?.touched">
+                Please select a role
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects and Pipelines Section -->
+    <div formArrayName="Projects" class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Projects and Pipelines</h4>
+        <button type="button" 
+                class="btn btn-primary" 
+                (click)="addProject()">
+          <i class="bi bi-plus-circle me-2"></i>Add Project
+        </button>
+      </div>
+
+      <div *ngFor="let project of Projects.controls; let i=index" 
+           [formGroupName]="i" 
+           class="card mb-3">
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Project #{{i + 1}}</h5>
+            <button type="button" 
+                    class="btn btn-outline-danger btn-sm" 
+                    (click)="removeProject(i)">
+              <i class="bi bi-trash me-2"></i>Remove Project
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label class="form-label">Project <span class="text-danger">*</span></label>
+                <select class="form-select" 
+                        formControlName="ProjectId" 
+                        (change)="loadPipelines(asFormGroup(project).get('ProjectId')?.value)"
+                        [class.is-invalid]="asFormGroup(project).get('ProjectId')?.invalid && asFormGroup(project).get('ProjectId')?.touched"
+                        required>
+                  <option value="">Select a project</option>
+                  <option *ngFor="let proj of azureProjects" 
+                          [value]="proj.Id">
+                    {{proj.Name}}
+                  </option>
+                </select>
+                <div class="invalid-feedback" 
+                     *ngIf="asFormGroup(project).get('ProjectId')?.invalid && asFormGroup(project).get('ProjectId')?.touched">
+                  Please select a project
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- Pipelines Section -->
+          <div formArrayName="Pipelines">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">Pipelines</h6>
+              <button type="button" 
+                      class="btn btn-outline-secondary btn-sm" 
+                      (click)="addPipeline(i)"
+                      [disabled]="!asFormGroup(project).get('ProjectId')?.value">
+                <i class="bi bi-plus-circle me-2"></i>Add Pipeline
+              </button>
+            </div>
+
+            <div *ngFor="let pipeline of getPipelinesFormArray(i).controls; let j=index" 
+                 [formGroupName]="j" 
+                 class="card mb-3">
+              <div class="card-body">
+                <div class="row align-items-center">
+                  <div class="col-md-6">
+                    <select class="form-select" 
+                            formControlName="Id" 
+                            (change)="onPipelineSelect(i, j, $event)"
+                            [class.is-invalid]="asFormGroup(pipeline).get('Id')?.invalid && asFormGroup(pipeline).get('Id')?.touched"
+                            required>
+                      <option [value]="null">Select a pipeline</option>                      <option *ngFor="let pipe of selectedProjectPipelines[asFormGroup(project).get('ProjectId')?.value] || []" 
+                              [value]="pipe.Id"
+                              [selected]="asFormGroup(pipeline).get('Id')?.value === pipe.Id">
+                        {{pipe.Name}}
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" 
+                         *ngIf="asFormGroup(pipeline).get('Id')?.invalid && asFormGroup(pipeline).get('Id')?.touched">
+                      Please select a pipeline
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex gap-2 justify-content-end">
+                      <button type="button" 
+                              class="btn btn-danger btn-sm" 
+                              (click)="removePipeline(i, j)">
+                        <i class="bi bi-trash me-2"></i>Remove
+                      </button>
+                      <button type="button" 
+                              class="btn btn-info btn-sm" 
+                              (click)="openPermissionsModal(i, j)"
+                              [disabled]="!asFormGroup(pipeline).get('Id')?.value">
+                        <i class="bi bi-gear me-2"></i>Permissions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>    <!-- Form Actions -->
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+      <button type="submit" 
+              class="btn btn-success" 
+              [disabled]="memberForm.invalid">
+        <i class="bi bi-check-circle me-2"></i>Add Member
+      </button>
+    </div>
+  </form>
+
+  <!-- Permissions Modal Component -->
+  <app-permissions-modal
+    [visible]="showPermissionsModal"
+    [pipelineName]="currentPipelineName"
+    [permissions]="currentPipelineFormGroup?.value"
+    (close)="closePermissionsModal()"
+    (save)="savePermissions($event)">
+  </app-permissions-modal>
+</div>

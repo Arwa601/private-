@@ -1,0 +1,92 @@
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade show" *ngIf="visible"></div>
+
+<!-- Modal Dialog -->
+<div class="modal" [class.show]="visible" [style.display]="visible ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-shield-lock me-2 text-primary"></i>
+          Edit Pipeline Permissions
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">        <p class="text-muted">
+          Manage permissions for <strong>{{ pipelineName }}</strong>
+        </p>
+
+        <!-- User and Pipeline information removed for cleaner interface -->
+
+        <div class="permissions-list">
+          <div class="permission-item">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="viewHistory" 
+                     [(ngModel)]="editedPermissions.CanViewHistory">
+              <label class="form-check-label" for="viewHistory">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-eye me-2 text-primary"></i>
+                  <div>
+                    <div>View History</div>
+                    <small class="text-muted">Access to historical runs and logs</small>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="permission-item">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="trigger" 
+                     [(ngModel)]="editedPermissions.CanTrigger">
+              <label class="form-check-label" for="trigger">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-play-circle me-2 text-primary"></i>
+                  <div>
+                    <div>Trigger Pipeline</div>
+                    <small class="text-muted">Ability to execute pipeline runs</small>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="permission-item">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="viewResults" 
+                     [(ngModel)]="editedPermissions.CanViewResults">
+              <label class="form-check-label" for="viewResults">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-bar-chart-line me-2 text-primary"></i>
+                  <div>
+                    <div>View Results</div>
+                    <small class="text-muted">Access to pipeline execution results</small>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="permission-item">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="downloadReport" 
+                     [(ngModel)]="editedPermissions.CanDownloadReport">
+              <label class="form-check-label" for="downloadReport">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-download me-2 text-primary"></i>
+                  <div>
+                    <div>Download Report</div>
+                    <small class="text-muted">Ability to download summary reports</small>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="onSave()">Save Permissions</button>
+      </div>
+    </div>
+  </div>
+</div>

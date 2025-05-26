@@ -1,0 +1,28 @@
+<mat-card class="server-chart">
+  <mat-card-title class="server-chart__header">
+    <p class="server-chart__header-title">Server Overview</p>
+  </mat-card-title>
+
+  <mat-card-content class="server-chart__content">
+    <div class="server-chart__content-item" *ngFor="let chart of charts; let i = index">
+      <div class="server-chart__content-item-text-wrapper">
+        <p class="server-chart__content-item-text">{{serverDataTitles[i]}}</p>
+      </div>
+      <apx-chart
+        style="width: 30%;"
+        [series]="chart.series || []"
+        [chart]="chart.chart || {type: 'area', height: 350}"
+        [xaxis]="chart.xaxis || {type: 'category', categories: []}"
+        [stroke]="chart.stroke || {curve: 'smooth'}"
+        [dataLabels]="chart.dataLabels || {enabled: false}"
+        [yaxis]="chart.yaxis || {show: true}"
+        [labels]="chart.labels || []"
+        [legend]="chart.legend || {show: true}"
+        [grid]="chart.grid || {show: false}"
+        [tooltip]="chart.tooltip || {enabled: true}"
+        [colors]="chart.colors || []"
+        [fill]="chart.fill || {type: 'solid'}"
+      ></apx-chart>
+    </div>
+  </mat-card-content>
+</mat-card>

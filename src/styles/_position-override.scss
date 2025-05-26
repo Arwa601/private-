@@ -1,0 +1,51 @@
+// Direct fix for dropdown positioning
+// This is a simpler approach that addresses the core issue
+
+// Remove all transformations from overlays
+.cdk-overlay-container {
+  .cdk-overlay-connected-position-bounding-box {
+    // Remove any transforms that are causing problems
+    transform: none !important;
+  }
+}
+
+// Override the position of the overlay pane
+.cdk-overlay-pane {
+  // Let Angular Material handle positioning
+  position: absolute !important;
+  transform: none !important;
+}
+
+// Special overrides for select panels
+.mat-mdc-select-panel, 
+.custom-select-panel {
+  // Basic panel styling
+  margin-top: 4px !important;
+  border-radius: 4px !important;
+  
+  // Match width to trigger element
+  min-width: calc(100% - 16px) !important; // Account for padding
+  
+  // Reset problematic transforms
+  transform: none !important;
+}
+
+// Panel positioning
+.cdk-global-overlay-wrapper {
+  // Let the overlay wrapper handle positioning
+  display: flex !important;
+  position: absolute !important;
+  z-index: 1000 !important;
+}
+
+// Use more direct selector for the Azure pipeline component
+.azure-pipeline-selector-dropdown {
+  // Override panel positioning forcefully
+  position: static !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+// Set proper z-index for focused fields
+.mat-mdc-form-field-type-mat-select.mat-focused {
+  z-index: 1001 !important;
+}
