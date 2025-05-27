@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { DashboardPageComponent } from './containers/dashboard-page/dashboard-page.component';
+import { DashboardComponent } from './containers/dashboard-page/dashboard-page.component';
 import { AzureDevopsComponent } from './components/azure-devops-page/azure-devops.component';
 
 
@@ -11,7 +11,7 @@ export const DASHBOARD_ROUTES: Routes = [
   },
   {
     path: 'overview',
-    component: DashboardPageComponent
+    component: DashboardComponent
   },
   {
     path: 'azure-devops',

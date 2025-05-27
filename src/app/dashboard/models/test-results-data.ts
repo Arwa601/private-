@@ -1,18 +1,12 @@
-export interface TestStepResult {
-  featureName: string;
-  stepName: string;
-  status: 'passed' | 'failed' | 'skipped' | 'running';
-  scenario: string;
-  exceptionType?: string;
-  exceptionMessage?: string;
-  duration: number;
-  timestamp: Date;
-  runId: number;        // Added to track which pipeline run produced this result
-  pipelineId: number;   // Added to track which pipeline the test was run in
-  projectName: string;  // Added to track which project the test belongs to
-  buildNumber: string;  // Added to track the build number 
-  retryCount?: number;  // Added to track retries for flaky tests
-  previousStatus?: 'passed' | 'failed' | 'skipped'; // Added to track status changes
+export interface TestStepResult{
+  Id: string;
+  ReportId: string;
+  Feature: string;
+  StepName: string;
+  Status: 'PASSED' | 'FAILED' ;
+  Scenario: string;
+  ExceptionType?: string;
+  ExceptionMessage?: string;
 }
 
 export interface TestFeatureSummary {

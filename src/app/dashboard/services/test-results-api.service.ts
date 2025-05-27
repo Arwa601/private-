@@ -1,24 +1,28 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { TestStepResult } from '../models/test-results-data';
+import { ArtifactResponse } from '../models/artifact-response';
 
 export interface PipelineExecutionResponse {
-  runId: number;
-  executionId: string;
-  State: string;    
-  Result?: string;  
+  RunId: number;
+  ExecutionId: string;
+  State: string;
+  Result: string;
 }
+
 @Injectable({
   providedIn: 'root'
 })
 export class TestResultsApiService {
-  private apiUrl = environment.apiUrl;
-  private readonly azureDevOpsUrl = 'https://ced-cloud-tfs.visualstudio.com'; 
-  constructor(private http: HttpClient) { }
+  private readonly apiUrl = environment.apiUrl;
+  private readonly azureDevOpsUrl = 'https://dev.azure.com';
 
- private getUserId(): string {
+  constructor(private http: HttpClient) {}
+
+  private getUserId(): string {
     const userId = localStorage.getItem('user_id');
     return userId || 'default';
   }
@@ -38,34 +42,137 @@ export class TestResultsApiService {
   }
 
   getTestResults(runId: number, projectName: string): Observable<TestStepResult[]> {
+    if (runId === 0) {
+      return throwError(() => new Error('Invalid run ID'));
+    }
+
     const userId = this.getUserId();
     return this.http.get<TestStepResult[]>(
-      `${this.apiUrl}/api/QAUser/test-results/${userId}/${encodeURIComponent(projectName)}/${runId}`
+      `${this.apiUrl}/api/QAUser/azure-logs/${encodeURIComponent(projectName)}/${runId}`
     ).pipe(catchError(this.handleError));
   }
 
-  downloadHtmlReport(projectName: string, pipelineId: number, runId: number): Observable<Blob> {
+  downloadHtmlReport(projectName: string, pipelineId: number, runId: number): Observable<string> {
     const userId = this.getUserId();
-    return this.http.get(
-      `${this.apiUrl}/QAUser/download-report/${userId}/${encodeURIComponent(projectName)}/${pipelineId}/${runId}`,
-      { responseType: 'blob' }
-    ).pipe(catchError(this.handleError));
+    return this.http.get<ArtifactResponse>(
+      `${this.apiUrl}/api/QAUser/download-artifact/${userId}/${encodeURIComponent(projectName)}/${pipelineId}/${runId}`
+    ).pipe(
+      map(response => {
+        if (!response.Artifacts || response.Artifacts.length === 0) {
+          throw new Error('No artifacts found');
+        }
+        // Get the download URL and ensure it has the format parameter
+        const downloadUrl = response.Artifacts[0].DownloadUrl;
+        return downloadUrl.includes('$format=zip') 
+          ? downloadUrl 
+          : `${downloadUrl}${downloadUrl.includes('?') ? '&' : '?'}$format=zip`;
+      }),
+      catchError(this.handleError)
+    );
   }
 
+downloadFromAzureDevOps(downloadUrl: string): Observable<{ type: 'blob' | 'auth', data: Blob | string }> {
+    const headers = new HttpHeaders({
+      'Accept': '*/*'
+    });
+
+    return this.http.get(downloadUrl, {
+      headers: headers,
+      responseType: 'arraybuffer', 
+      observe: 'response'
+    }).pipe(
+      map(response => {
+        const contentType = response.headers.get('content-type');
+        const data = response.body;
+
+        // Log response details for debugging
+        console.log('Response details:', {
+          contentType,
+          dataLength: data?.byteLength,
+          headers: response.headers.keys()
+        });
+
+        if (!data) {
+          throw new Error('Empty response received');
+        }
+
+        // If we received HTML
+        if (contentType?.includes('text/html')) {
+          const text = new TextDecoder().decode(data);
+          // If it contains login form or auth-related content
+          if (text.toLowerCase().includes('login') || text.toLowerCase().includes('sign in')) {
+            return {
+              type: 'auth' as const,
+              data: downloadUrl 
+            };
+          }
+        }
+
+        // For zip or other binary content
+        return {
+          type: 'blob' as const,
+          data: new Blob([data], { type: contentType || 'application/octet-stream' })
+        };
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Download error:', {
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url,
+          headers: error.headers?.keys(),
+          error: error.error
+        });
+
+        if (error.status === 401 || error.status === 403) {
+          return throwError(() => ({
+            type: 'auth' as const,
+            data: downloadUrl
+          }));
+        }
+
+        return throwError(() => new Error(this.getErrorMessage(error)));
+      })
+    );
+  }
+
+  private getErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 404) {
+      return 'Artifact not found or no longer available';
+    }
+    if (error.status === 401) {
+      return 'Authentication required. Please login to Azure DevOps';
+    }
+    if (error.status === 403) {
+      return 'Access denied. Please check your permissions';
+    }
+    if (!error.status) {
+      return 'Network error occurred. Please check your connection';
+    }
+    return `Download failed: ${error.message}`;
+  }
   getPipelineUrl(projectName: string, pipelineId: number): string {
-    // Format: https://organization/Project_name/_build?definitionId=pipeline_id
     return `${this.azureDevOpsUrl}/${projectName}/_build?definitionId=${pipelineId}`;
   }
 
-  private handleError(error: any) {
+  getBuildUrl(projectName: string, runId: number): string {
+    return `${this.azureDevOpsUrl}/${projectName}/_build/results?buildId=${runId}`;
+  }
+
+  private handleError(error: HttpErrorResponse) {
     console.error('API Error:', error);
     let errorMessage = 'An unknown error occurred';
     
-    if (error.error instanceof ErrorEvent) {
+    if (error.error instanceof Error) {
       // Client-side error
       errorMessage = `Error: ${error.error.message}`;
+    } else if (typeof error.error === 'string') {
+      // Server returned error as string
+      errorMessage = `Error: ${error.error}`;
+    } else if (error.error?.error) {
+      // Server returned error object
+      errorMessage = `Error: ${error.error.error}`;
     } else {
-      // Server-side error
+      // Default error message with status
       errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
     

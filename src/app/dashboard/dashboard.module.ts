@@ -19,11 +19,12 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { NgxEchartsModule } from 'ngx-echarts';
-
+import { PipelineStatusService } from './services/pipeline-status.service';
 import { DASHBOARD_ROUTES } from './dashboard.routes';
 // Import the AzureDevopsComponent as it's needed in the routes
 import { AzureDevopsComponent } from './components/azure-devops-page/azure-devops.component';
-import { DashboardPageComponent } from './containers/dashboard-page/dashboard-page.component';
+import { DashboardComponent } from './containers/dashboard-page/dashboard-page.component';
+import { PipelineStorageService } from './services/pipeline-storage.service';
 
 @NgModule({
   imports: [
@@ -34,9 +35,8 @@ import { DashboardPageComponent } from './containers/dashboard-page/dashboard-pa
     ReactiveFormsModule,
     MatCardModule,
     MatToolbarModule,
-    // Import standalone components
     AzureDevopsComponent,
-    DashboardPageComponent,
+    DashboardComponent,
     MatIconModule,
     MatButtonModule,
     MatTableModule,
@@ -55,6 +55,8 @@ import { DashboardPageComponent } from './containers/dashboard-page/dashboard-pa
     })
   ],
   providers: [
+     PipelineStorageService,
+     PipelineStatusService
   ]
 })
 export class DashboardModule { }

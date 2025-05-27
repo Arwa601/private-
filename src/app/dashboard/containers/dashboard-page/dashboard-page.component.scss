@@ -3,6 +3,7 @@
 @import '../../../styles/colors';
 @import '../../../../styles/_font-weights';
 
+// General Card Styles
 .card {
   padding: 0;
   margin-bottom: 20px;
@@ -12,6 +13,46 @@
   }
 }
 
+// Header Styles
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  padding: $toolbar-padding;
+  background: none;
+  height: auto;
+
+  .title-inner-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    .title-text {
+      margin: 0;
+      font-size: 24px;
+      font-weight: $font-weight-medium;
+    }
+
+    .title-date {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: $gray-70;
+
+      .title-data-text {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+
+  @media (max-width: $small) {
+    flex-direction: column;
+    align-items: baseline;
+    padding: 16px;
+  }
+}
+
+// Results Card Styles
 .results-card {
   margin: 20px;
   padding: 0;
@@ -23,24 +64,25 @@
     padding: 16px;
     background-color: #f5f5f5;
     border-bottom: 1px solid $light-grey;
-  }
 
-  .header-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 10px;
-    
-    .trigger-btn {
-      background-color: #7b1fa2; // purple accent
-      color: white;
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      
+      .trigger-btn {
+        background-color: #7b1fa2;
+        color: white;
+      }
     }
   }
+
+  mat-card-content {
+    padding: 16px;
+  }
 }
 
-mat-card-content {
-  padding: 16px;
-}
-
+// Summary Stats Styles
 .summary-stats {
   display: flex;
   justify-content: space-around;
@@ -54,6 +96,7 @@ mat-card-content {
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
 
     .stat-value {
       font-size: 32px;
@@ -69,7 +112,6 @@ mat-card-content {
 
     &.clickable {
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
       
       &:hover {
         transform: translateY(-2px);
@@ -100,9 +142,15 @@ mat-card-content {
   }
 }
 
+// Table Styles
 .table-container {
   overflow-x: auto;
   width: 100%;
+
+  .filter-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
 
   table {
     width: 100%;
@@ -118,11 +166,13 @@ mat-card-content {
   }
 }
 
+// Status Badge Styles
 .status-badge {
   padding: 4px 8px;
   border-radius: 16px;
   font-size: 12px;
   font-weight: $font-weight-medium;
+  transition: all 0.3s ease;
   
   &.status-passed {
     background-color: #e6f4ea;
@@ -135,6 +185,7 @@ mat-card-content {
   }
 }
 
+// Row Status Styles
 .failed-row {
   background-color: rgba(252, 232, 230, 0.2);
 }
@@ -143,6 +194,7 @@ mat-card-content {
   background-color: rgba(230, 244, 234, 0.2);
 }
 
+// Loading and Error States
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
@@ -171,177 +223,216 @@ mat-card-content {
   color: #c5221f;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  padding: $toolbar-padding;
-  background: none;
-  height: auto;
-
-  @media (max-width: $small) {
-    flex-direction: column;
-    align-items: baseline;
-    padding: 0;
-  }
-}
-
-.empty-block {
+// Material Table Overrides
+.mat-mdc-table {
   width: 100%;
-  height: 1px;
+  background-color: white;
 }
 
-.title-inner-wrapper {
-  display: flex;
-  align-items: center;
+.mat-mdc-header-cell {
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #fafafa;
+}
 
-  @media (max-width: $normal) {
-    flex-wrap: wrap;
+.mat-mdc-cell {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+// Custom Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+
+  &:hover {
+    background: #555;
   }
 }
 
-.title-inner-wrapper + .title-inner-wrapper {
-  @media (max-width: $small) {
-    margin-top: 24px;
-  }
-}
-
-.title-text {
-  margin-right: 24px;
-  margin-bottom: 0;
-}
-
-.dashboard-mat-tab {
-  @media (max-width: $normal) {
-    width: 100%;
-    margin-top: 24px;
-  }
-}
-
-.title-date {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 24px;
-
-  @media (min-width: $small) and (max-width: $normal) {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
-.title-icon-data {
-  margin-right: 16px;
-}
-
-.title-data-text {
-  margin: 0;
-  font-weight: $font-weight-light;
-  font-size: $fs-normal;
-}
-
-.title-button {
-  @media (max-width: $normal) {
-    margin-top: 24px;
-  }
-}
-
-.charts-wrapper {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 24px;
-
-  @media (max-width: $normal) {
-    flex-wrap: wrap;
-  }
-}
-
-.chart {
-  width: 23.5%;
-
-  @media (max-width: $normal) {
-    width: 48%;
-
-    &:nth-last-child(2n) {
-      margin-bottom: 24px;
-    }
-  }
-
-  @media (max-width: $small) {
-    width: 100%;
-    margin-bottom: 24px;
-  }
-}
-
-.dashboard-section {
-  margin: 24px 0;
-  
-  .mat-card-header {
-    padding: 16px;
-    border-bottom: 1px solid $light-grey;
-    
-    .mat-card-title {
-      margin: 0;
-      font-size: 20px;
-      font-weight: $font-weight-light;
-    }
-  }
-}
-
-.filter-field {
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.pipeline-card {
+// Footer Styles
+.footer {
   margin: 20px;
-  padding: 0;
-
-  mat-card-header {
-    background-color: #f5f5f5;
-    border-bottom: 1px solid $light-grey;
-    padding: 16px;
-  }
-}
-
-.trigger-pipeline-container {
   padding: 16px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  color: $gray-70;
+  font-size: 14px;
 
-  .trigger-pipeline-selectors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    flex: 1;
-
-    .project-selector, .pipeline-selector {
-      min-width: 200px;
-    }
+  .user-info {
+    margin: 0;
   }
 
-  .trigger-specific-btn {
-    background-color: #f44336; // Red for emphasis
-    color: white;
-    height: 40px;
-    padding: 0 24px;
-  }
-
-  @media (max-width: $small) {
-    flex-direction: column;
-    align-items: stretch;
-
-    .trigger-pipeline-selectors {
-      flex-direction: column;
-    }
+  .api-platform-text {
+    margin: 0;
+    font-weight: $font-weight-medium;
   }
 }
 
+// Responsive Adjustments
+@media screen and (max-width: $small) {
+  .results-card {
+    margin: 10px;
+  }
+
+  .mat-mdc-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .summary-stats {
+    .stat-box {
+      min-width: 100px;
+      padding: 8px 16px;
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .stat-label {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+}
+
+// Dark Theme Support
+.dark-theme {
+  .card,
+  .results-card {
+    background-color: #424242;
+    color: white;
+  }
+
+  .mat-mdc-header-cell {
+    background-color: #303030;
+    color: white;
+  }
+
+  .mat-mdc-cell {
+    color: white;
+  }
+
+  .status-badge {
+    &.status-passed {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #81c784;
+    }
+
+    &.status-failed {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #e57373;
+    }
+  }
+
+  .filter-field {
+    color: white;
+  }
+
+  .mat-mdc-paginator {
+    background-color: #424242;
+    color: white;
+  }
+}
+
+// Animations
 @keyframes pulse {
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
 
+// Accessibility
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.clickable-row:focus,
+.stat-box:focus {
+  outline: 2px solid #7b1fa2;
+  outline-offset: 2px;
+}
+
+// Print Styles
+@media print {
+  .header-actions,
+  .filter-field,
+  mat-paginator,
+  .footer {
+    display: none !important;
+  }
+
+  .results-card {
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .mat-mdc-table {
+    border: 1px solid #ddd;
+  }
+}
+
+// Additional Material Overrides
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.mat-mdc-paginator {
+  background-color: white;
+}
+
+// Empty State
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: $gray-70;
+
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    margin-bottom: 16px;
+  }
+}
+
+// Icons
+mat-icon {
+  vertical-align: middle;
+}
+
+// Tooltips
+.mat-tooltip {
+  font-size: 12px;
+  max-width: 300px;
+  white-space: pre-line;
+}
