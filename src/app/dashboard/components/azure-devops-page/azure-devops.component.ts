@@ -405,7 +405,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
   }
 
   private getPipelineUrl(projectName: string, pipelineId: number): string {
-    return `https://dev.azure.com/${projectName}/_build?definitionId=${pipelineId}`;
+    return `https://ced-cloud-tfs.visualstudio.com/${projectName}/_build?definitionId=${pipelineId}`;
   }
 
   downloadHtmlReport(): void {
@@ -492,11 +492,20 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       default: return 'badge bg-secondary';
     }
   }
-
   private stopStatusPolling() {
     if (this.statusPolling) {
       this.statusPolling.unsubscribe();
       this.statusPolling = undefined;
     }
   }
+clearLocalState(): void {
+  this.stopStatusPolling();
+  this.pipelineStorageService.clearExecution();
+  this.currentExecution = null;
+  this.pipelineStatus.next({ isRunning: false });
+  this.statusMessage = 'Local state cleared. You can now trigger a new pipeline.';
+  this.currentTestResults = null;
+  this.loadProjects();
+}
+  
 }

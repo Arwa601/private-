@@ -107,9 +107,9 @@
           <button class="btn btn-primary" (click)="downloadHtmlReport()" [disabled]="!currentExecution">
             <i class="bi bi-download me-2"></i>Download HTML Report
           </button>
-          <a *ngIf="currentExecution?.runId" 
+          <a *ngIf="currentExecution?.runId &&currentExecution?.projectName" 
              [routerLink]="['/app/dashboard/overview']" 
-             [queryParams]="{build_id: currentExecution?.runId}"
+             [queryParams]="{build_id: currentExecution?.runId,projectname:currentExecution?.projectName}"
              class="btn btn-success">
             <i class="bi bi-bar-chart me-2"></i>View in Dashboard
           </a>
@@ -127,6 +127,7 @@
                     [disabled]="!currentExecution">
               <i class="bi bi-arrow-clockwise me-1"></i>Refresh
             </button>
+          <button class="btn btn-outline-secondary btn-sm" (click)="clearLocalState()" color="secondary">Clear</button>
           </div>
         </div>
         

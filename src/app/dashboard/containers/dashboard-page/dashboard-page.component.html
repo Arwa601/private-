@@ -2,23 +2,21 @@
   <mat-toolbar class="page-header" role="heading">
     <div class="title-inner-wrapper">
       <p class="title-text">Test Results Dashboard</p>
-      <div class="title-date">
-        <mat-icon class="title-icon-data">calendar_today</mat-icon>
-        <p class="title-data-text">{{currentDate | date:'yyyy-MM-dd HH:mm:ss'}} UTC</p>
-      </div>
     </div>
   </mat-toolbar>
 </mat-card>
+
+
 
 <mat-card class="results-card">
   <mat-card-header>
     <mat-card-title>Test Results Summary</mat-card-title>
     <div class="header-actions">
-      <button mat-raised-button color="accent" class="trigger-btn" (click)="triggerPipeline()" [disabled]="isLoading">
+      <button mat-raised-button color="primary" (click)="triggerPipeline()">
         <mat-icon>play_arrow</mat-icon>
-        Run Tests
+        <span>Run Tests</span>
       </button>
-      <button mat-raised-button color="primary" (click)="refreshResults()" [disabled]="isLoading">
+      <button mat-raised-button color="primary" (click)="loadTestResults()" [disabled]="isLoading">
         <mat-icon>refresh</mat-icon>
         Refresh Results
       </button>
@@ -49,7 +47,7 @@
     <div *ngIf="error" class="error-container">
       <mat-icon color="warn">error</mat-icon>
       <p>{{ error }}</p>
-      <button mat-stroked-button color="primary" (click)="refreshResults()">
+      <button mat-stroked-button color="primary" (click)="loadTestResults()">
         <mat-icon>refresh</mat-icon>
         Try Again
       </button>
@@ -63,43 +61,42 @@
       </mat-form-field>
       
       <table mat-table [dataSource]="dataSource" matSort class="results-table">
+        <!-- Feature Column -->
         <ng-container matColumnDef="feature">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Feature</th>
-          <td mat-cell *matCellDef="let result">{{ result.Feature }}</td>
+          <td mat-cell *matCellDef="let result">{{ result.feature }}</td>
         </ng-container>
 
+        <!-- Scenario Column -->
         <ng-container matColumnDef="scenario">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Scenario</th>
-          <td mat-cell *matCellDef="let result">{{ result.Scenario }}</td>
+          <td mat-cell *matCellDef="let result">{{ result.scenario }}</td>
         </ng-container>
 
+        <!-- Status Column -->
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
           <td mat-cell *matCellDef="let result">
-            <span class="status-badge" [ngClass]="getStatusClass(result.Status)">{{ result.Status }}</span>
+            <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
           </td>
         </ng-container>
 
+        <!-- Exception Type Column -->
         <ng-container matColumnDef="exceptionType">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Type</th>
-          <td mat-cell *matCellDef="let result">{{ result.ExceptionType || '-' }}</td>
+          <td mat-cell *matCellDef="let result">{{ result.exceptionType || '-' }}</td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-            [ngClass]="{'failed-row': row.Status === 'FAILED', 'passed-row': row.Status === 'PASSED'}"
-            [matTooltip]="row.ExceptionMessage" 
-            [matTooltipDisabled]="!row.ExceptionMessage"
-            class="clickable-row">
-        </tr>
+            [ngClass]="{'failed-row': row.status === 'FAILED', 'passed-row': row.status === 'PASSED'}"
+            [matTooltip]="row.exceptionMessage" 
+            [matTooltipDisabled]="!row.exceptionMessage"
+            (click)="viewTestDetails(row)"
+            class="clickable-row"></tr>
       </table>
 
       <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
     </div>
   </mat-card-content>
 </mat-card>
-
-<div class="footer">
-  <p class="user-info">Logged in as: {{ currentUser }}</p>
-  <p class="api-platform-text">APIs Test Automation Platform</p>
-</div>

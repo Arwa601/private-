@@ -23,19 +23,18 @@ export interface TestResultsSummary {
   totalSteps: number;
   passedSteps: number;
   failedSteps: number;
-  skippedSteps: number;
   overallPassRate: number;
   features: TestFeatureSummary[];
   recentResults: TestStepResult[];
   lastUpdated: Date;
-  runId: number;            // Added to track which pipeline run
-  projectName: string;      // Added to track which project
-  buildNumber: string;      // Added to track build number
-  startTime: Date;         // Added to track when the tests started
-  endTime: Date;          // Added to track when the tests completed
-  duration: number;       // Added to track total run duration
-  environment?: string;  // Added to track test environment
-  branch?: string;      // Added to track source code branch
+  runId: number;            
+  projectName: string;      
+  buildNumber: string;      
+  startTime: Date;         
+  endTime: Date;         
+  duration: number;      
+  environment?: string;  
+  branch?: string;      
 }
 
 export interface TestResult {
@@ -58,7 +57,7 @@ export interface PipelineStatus {
   progress?: number;
   startTime?: Date;
   estimatedDuration?: number;
-  lastCompletedRun?: {     // Added to track last completed run
+  lastCompletedRun?: {     
     runId: number;
     status: string;
     timestamp: Date;
@@ -69,10 +68,15 @@ export interface PipelineStatus {
       skipped: number;
     };
   };
-  historicalRuns?: {      // Added to track historical runs
+  historicalRuns?: {      
     runId: number;
     timestamp: Date;
     status: string;
     passRate: number;
   }[];
 }
+export const PIPELINE_CONSTANTS = {
+  STATUS_CHECK_INTERVAL: 10000, // 10 seconds
+  STUCK_STATE_TIMEOUT: 120000,  // 2 minutes
+  MAX_RETRIES: 3
+} as const;
