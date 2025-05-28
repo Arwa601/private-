@@ -18,7 +18,7 @@ export interface PipelineExecutionResponse {
 })
 export class TestResultsApiService {
   private readonly apiUrl = environment.apiUrl;
-  private readonly azureDevOpsUrl = 'https://dev.azure.com';
+  private readonly azureDevOpsUrl = 'https://ced-cloud-tfs.visualstudio.com';
 
   constructor(private http: HttpClient) {}
 

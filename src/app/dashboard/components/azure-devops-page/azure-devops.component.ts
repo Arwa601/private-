@@ -29,10 +29,6 @@ interface DownloadResult {
   data: Blob | string;
 }
 
-interface UserTimeDisplay {
-  currentDateTime: string;
-  userLogin: string;
-}
 
 @Component({
   selector: 'app-simple-pipeline-selector',
@@ -59,11 +55,6 @@ interface UserTimeDisplay {
 export class AzureDevopsComponent implements OnInit, OnDestroy {
   @Output() runPipeline = new EventEmitter<{projectId: string, pipelineId: number, response: PipelineExecutionResponse}>();
 
-  // Time display properties
-  timeDisplay: UserTimeDisplay = {
-    currentDateTime: '',
-    userLogin: 'Arwa601'
-  };
   private timeUpdateInterval?: number;
   private destroy$ = new Subject<void>();
 
@@ -102,7 +93,6 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     private domSanitizer: DomSanitizer
   ) {
     this.initializeForm();
-    this.startTimeUpdates();
   }
 
   private initializeForm(): void {
@@ -125,35 +115,13 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  private startTimeUpdates(): void {
-    // Initial update
-    this.updateDateTime();
-    
-    // Update every second
-    this.timeUpdateInterval = window.setInterval(() => {
-      this.updateDateTime();
-    }, 1000);
-  }
-
-  private updateDateTime(): void {
-    const now = new Date();
-    this.timeDisplay.currentDateTime = this.formatUTCDateTime(now);
-  }
-
   private formatUTCDateTime(date: Date): string {
     return date.toISOString()
       .replace('T', ' ')
       .slice(0, 19);
   }
 
-  getTimeDisplay(): UserTimeDisplay {
-    return this.timeDisplay;
-  }
 
-  getUserInfo(): string {
-    return `${this.timeDisplay.userLogin}`;
-  }
   private getCurrentExecution(): { projectName: string; pipelineId: number; runId: number } | null {
   if (!this.currentExecution) {
     this.handleTestResultsError(new Error('No execution context available'));

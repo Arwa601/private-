@@ -241,6 +241,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.testResultsService.getTestResults(this.currentExecution.runId, this.currentExecution.projectName)
       .pipe(
         map((results: TestStepResult[]) => {
+          console.log('Raw API response:', results);
           this.testResultsStateService.updateTestResults(
             results,
             this.currentExecution!.runId,
@@ -267,6 +268,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe({
         next: (results: TestResult[]) => {
+          console.log('Processed results:', results);
           this.handleTestResults(results);
         },
         error: (error: Error) => {
