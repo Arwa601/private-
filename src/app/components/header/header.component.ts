@@ -42,7 +42,7 @@ export class HeaderComponent implements OnInit {
       if (state.isAuthenticated) {
         this.userName = `${state.firstName} ${state.lastName}`;
       } else {
-        this.userName = 'Guest';
+        this.userName = 'Anonymous';
       }
     });
   }

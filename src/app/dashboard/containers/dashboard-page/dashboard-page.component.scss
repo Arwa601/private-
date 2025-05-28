@@ -3,12 +3,55 @@
 @import '../../../styles/colors';
 @import '../../../../styles/_font-weights';
 
+// Time and User Display Styles
+.time-user-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid $light-grey;
+  font-family: 'Roboto Mono', monospace;
+
+  .time-info,
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+    mat-icon {
+      color: $gray-60;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    span {
+      color: $gray-90;
+      font-size: 14px;
+      font-weight: $font-weight-medium;
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: $small) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}
+
+// Card Styles
 .card {
   padding: 0;
   margin-bottom: 20px;
 
   @media (max-width: $small) {
-    padding: 24px;
+    padding: 0;
   }
 }
 
@@ -31,7 +74,7 @@
     gap: 10px;
     
     .trigger-btn {
-      background-color: #7b1fa2; // purple accent
+      background-color: #7b1fa2;
       color: white;
     }
   }
@@ -41,6 +84,7 @@ mat-card-content {
   padding: 16px;
 }
 
+// Summary Stats Styles
 .summary-stats {
   display: flex;
   justify-content: space-around;
@@ -100,6 +144,7 @@ mat-card-content {
   }
 }
 
+// Table Styles
 .table-container {
   overflow-x: auto;
   width: 100%;
@@ -113,6 +158,24 @@ mat-card-content {
       
       &:hover {
         background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .mat-column-exceptionMessage {
+      max-width: 300px;
+      
+      .error-message-content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 4px 8px;
+        
+        &.has-error {
+          color: #c5221f;
+          background-color: rgba(252, 232, 230, 0.3);
+          border-radius: 4px;
+          font-family: 'Roboto Mono', monospace;
+        }
       }
     }
   }
@@ -143,6 +206,7 @@ mat-card-content {
   background-color: rgba(230, 244, 234, 0.2);
 }
 
+// Loading and Error States
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
@@ -171,6 +235,7 @@ mat-card-content {
   color: #c5221f;
 }
 
+// Header Styles
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -185,11 +250,7 @@ mat-card-content {
   }
 }
 
-.empty-block {
-  width: 100%;
-  height: 1px;
-}
-
+// Title Styles
 .title-inner-wrapper {
   display: flex;
   align-items: center;
@@ -199,149 +260,83 @@ mat-card-content {
   }
 }
 
-.title-inner-wrapper + .title-inner-wrapper {
-  @media (max-width: $small) {
-    margin-top: 24px;
-  }
-}
-
 .title-text {
   margin-right: 24px;
   margin-bottom: 0;
+  font-size: 20px;
+  font-weight: $font-weight-medium;
 }
 
-.dashboard-mat-tab {
-  @media (max-width: $normal) {
-    width: 100%;
-    margin-top: 24px;
-  }
-}
-
-.title-date {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 24px;
-
-  @media (min-width: $small) and (max-width: $normal) {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
-.title-icon-data {
-  margin-right: 16px;
-}
-
-.title-data-text {
-  margin: 0;
-  font-weight: $font-weight-light;
-  font-size: $fs-normal;
-}
-
-.title-button {
-  @media (max-width: $normal) {
-    margin-top: 24px;
-  }
-}
-
-.charts-wrapper {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 24px;
-
-  @media (max-width: $normal) {
-    flex-wrap: wrap;
-  }
-}
-
-.chart {
-  width: 23.5%;
-
-  @media (max-width: $normal) {
-    width: 48%;
-
-    &:nth-last-child(2n) {
-      margin-bottom: 24px;
-    }
-  }
-
-  @media (max-width: $small) {
-    width: 100%;
-    margin-bottom: 24px;
-  }
-}
-
-.dashboard-section {
-  margin: 24px 0;
-  
-  .mat-card-header {
-    padding: 16px;
-    border-bottom: 1px solid $light-grey;
-    
-    .mat-card-title {
-      margin: 0;
-      font-size: 20px;
-      font-weight: $font-weight-light;
-    }
-  }
-}
-
+// Filter Field
 .filter-field {
   width: 100%;
   margin-bottom: 16px;
-}
 
-.pipeline-card {
-  margin: 20px;
-  padding: 0;
-
-  mat-card-header {
-    background-color: #f5f5f5;
-    border-bottom: 1px solid $light-grey;
-    padding: 16px;
+  .mat-form-field-wrapper {
+    padding-bottom: 0;
   }
 }
 
-.trigger-pipeline-container {
-  padding: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-
-  .trigger-pipeline-selectors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    flex: 1;
-
-    .project-selector, .pipeline-selector {
-      min-width: 200px;
-    }
-  }
-
-  .trigger-specific-btn {
-    background-color: #f44336; // Red for emphasis
-    color: white;
-    height: 40px;
-    padding: 0 24px;
-  }
-
-  @media (max-width: $small) {
-    flex-direction: column;
-    align-items: stretch;
-
-    .trigger-pipeline-selectors {
-      flex-direction: column;
-    }
-  }
-}
-
+// Animation
 @keyframes pulse {
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
 
+// Responsive adjustments
+@media (max-width: $small) {
+  .time-user-display {
+    padding: 12px 16px;
+    
+    .time-info,
+    .user-info {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  .results-card {
+    margin: 12px;
+    
+    mat-card-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      
+      .header-actions {
+        margin-left: 0;
+      }
+    }
+  }
+
+  .summary-stats {
+    .stat-box {
+      width: 100%;
+    }
+  }
+}
+
+// Make sure table is scrollable on mobile
+.table-container {
+  margin-top: 16px;
+  
+  @media (max-width: $small) {
+    margin-top: 8px;
+    
+    table {
+      td.mat-cell,
+      th.mat-header-cell {
+        padding: 8px;
+        
+        &:first-child {
+          padding-left: 16px;
+        }
+        
+        &:last-child {
+          padding-right: 16px;
+        }
+      }
+    }
+  }
+}

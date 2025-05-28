@@ -12,12 +12,55 @@ export class TestResultsStateService {
 
   testResults$ = this.testResultsSubject.asObservable();
 
-  updateTestResults(summary: TestResultsSummary): void {
+  updateTestResults(results: TestStepResult[], runId?: number, projectName?: string): void {
+    if (!results.length) return;
+
+    const summary: TestResultsSummary = {
+      totalFeatures: new Set(results.map(r => r.Feature)).size,
+      totalSteps: results.length,
+      passedSteps: results.filter(r => r.Status === 'PASSED').length,
+      failedSteps: results.filter(r => r.Status === 'FAILED').length,
+      overallPassRate: 0,
+      features: this.calculateFeatureSummaries(results),
+      recentResults: results.slice(-5), // Keep last 5 results
+      lastUpdated: new Date(),
+      runId: runId || 0,
+      projectName: projectName || '',
+      buildNumber: runId?.toString() || '0',
+      startTime: new Date(),
+      endTime: new Date(),
+      duration: 0
+    };
+
+    // Calculate pass rate
+    summary.overallPassRate = (summary.passedSteps / summary.totalSteps) * 100;
+
     this.testResultsSubject.next(summary);
     this.lastRunId = summary.runId;
     this.lastProjectName = summary.projectName;
+    
     // Store in localStorage for persistence
     localStorage.setItem('lastTestResults', JSON.stringify(summary));
+  }
+
+  private calculateFeatureSummaries(results: TestStepResult[]): any[] {
+    const featureMap = new Map<string, TestStepResult[]>();
+    
+    results.forEach(result => {
+      if (!featureMap.has(result.Feature)) {
+        featureMap.set(result.Feature, []);
+      }
+      featureMap.get(result.Feature)?.push(result);
+    });
+
+    return Array.from(featureMap.entries()).map(([featureName, featureResults]) => ({
+      featureName,
+      totalSteps: featureResults.length,
+      passedSteps: featureResults.filter(r => r.Status === 'PASSED').length,
+      failedSteps: featureResults.filter(r => r.Status === 'FAILED').length,
+      skippedSteps: 0,
+      duration: 0 // Calculate if you have duration info
+    }));
   }
 
   getLastRunInfo(): { runId: number | null; projectName: string | null } {
@@ -38,8 +81,16 @@ export class TestResultsStateService {
     const stored = localStorage.getItem('lastTestResults');
     if (stored) {
       try {
-        const summary = JSON.parse(stored) as TestResultsSummary;
-        this.updateTestResults(summary);
+        const storedSummary = JSON.parse(stored) as TestResultsSummary;
+        // Create test results from the stored summary
+        const testResults: TestStepResult[] = storedSummary.recentResults;
+        if (testResults.length > 0) {
+          this.updateTestResults(
+            testResults,
+            storedSummary.runId,
+            storedSummary.projectName
+          );
+        }
       } catch (error) {
         console.error('Error restoring test results:', error);
       }

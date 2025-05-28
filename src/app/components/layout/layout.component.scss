@@ -65,11 +65,11 @@
   
   &.sidebar-open {
     .content-area {
-      margin-left: 240px;
-      width: calc(100% - 240px);
+      margin-left: 280px; /* Match the sidebar width */
+      width: calc(100% - 280px); /* Adjust width to account for sidebar */
       
       @media (max-width: 768px) {
-        margin-left: 218px;
+        margin-left: 218px; /* Match the sidebar width on mobile */
         width: calc(100% - 218px);
       }
     }
@@ -121,17 +121,24 @@
   flex: 1;
   padding: 24px;
   min-height: calc(100vh - 64px - 56px); /* Adjust for header and footer */
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.3s ease, width 0.3s ease;
   margin-top: 64px; /* Header height */
   background-color: #f8f9fa;
 
   &.with-sidebar {
     margin-left: 280px; /* Match sidebar width */
+    width: calc(100% - 280px);
+
+    @media (max-width: 768px) {
+      margin-left: 218px; /* Match sidebar width on mobile */
+      width: calc(100% - 218px);
+    }
   }
   
   @media (max-width: 1024px) {
     &.with-sidebar {
-      margin-left: 0;
+      margin-left: 0; /* Reset for overlay behavior */
+      width: 100%;
     }
   }
 }
@@ -148,6 +155,10 @@
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     transform: translateX(-100%);
     z-index: 980;
+
+    &.sidebar-open {
+      transform: translateX(0);
+    }
   }
   
   .sidebar-open .sidebar {
@@ -165,8 +176,7 @@
     background-color: rgba(0, 0, 0, 0.3);
     z-index: 970;
   }
-  
-  /* Reset content area when in mobile view */
+
   .content-area, .main-container.sidebar-open .content-area {
     margin-left: 0;
     width: 100%;

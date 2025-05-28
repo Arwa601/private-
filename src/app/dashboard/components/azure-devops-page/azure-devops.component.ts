@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, lastValueFrom, Subscription } from 'rxjs';
+import { BehaviorSubject, lastValueFrom, Subscription, timer, EMPTY } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,7 +16,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatNativeDateModule } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { switchMap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 import { TestResultsApiService, PipelineExecutionResponse } from '../../services/test-results-api.service';
 import { TestStepResult } from '../../models/test-results-data';
@@ -23,10 +24,14 @@ import { AzureDevOpsService, AzureProject, AzurePipeline } from '../../../servic
 import { PipelineStorageService, PipelineExecution } from '../../services/pipeline-storage.service';
 import { PipelineStatusService } from '../../services/pipeline-status.service';
 
-
 interface DownloadResult {
   type: 'blob' | 'auth';
   data: Blob | string;
+}
+
+interface UserTimeDisplay {
+  currentDateTime: string;
+  userLogin: string;
 }
 
 @Component({
@@ -54,6 +59,14 @@ interface DownloadResult {
 export class AzureDevopsComponent implements OnInit, OnDestroy {
   @Output() runPipeline = new EventEmitter<{projectId: string, pipelineId: number, response: PipelineExecutionResponse}>();
 
+  // Time display properties
+  timeDisplay: UserTimeDisplay = {
+    currentDateTime: '',
+    userLogin: 'Arwa601'
+  };
+  private timeUpdateInterval?: number;
+  private destroy$ = new Subject<void>();
+
   pipelineStatus = new BehaviorSubject<{isRunning: boolean, progress?: number, currentStage?: string}>({isRunning: false});
   statusMessage = '';
   currentTestResults: {
@@ -68,7 +81,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
   selectedPipeline: AzurePipeline | null = null;
   selectedProjectPipelines: { [key: string]: AzurePipeline[] } = {};
 
-  schedulePipelineForm: FormGroup;
+  schedulePipelineForm!: FormGroup;
   isScheduleEnabled: boolean = false;
 
   currentExecution: {
@@ -76,8 +89,8 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     pipelineId: number;
     runId: number;
   } | null = null;
+  
   debugMode: boolean = false;
-
   private statusPolling?: Subscription;
 
   constructor(
@@ -88,6 +101,11 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     private pipelineStatusService: PipelineStatusService,
     private domSanitizer: DomSanitizer
   ) {
+    this.initializeForm();
+    this.startTimeUpdates();
+  }
+
+  private initializeForm(): void {
     this.schedulePipelineForm = this.formBuilder.group({
       scheduleEnabled: [false],
       scheduledDate: [{ value: '', disabled: true }, Validators.required],
@@ -108,6 +126,50 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     });
   }
 
+  private startTimeUpdates(): void {
+    // Initial update
+    this.updateDateTime();
+    
+    // Update every second
+    this.timeUpdateInterval = window.setInterval(() => {
+      this.updateDateTime();
+    }, 1000);
+  }
+
+  private updateDateTime(): void {
+    const now = new Date();
+    this.timeDisplay.currentDateTime = this.formatUTCDateTime(now);
+  }
+
+  private formatUTCDateTime(date: Date): string {
+    return date.toISOString()
+      .replace('T', ' ')
+      .slice(0, 19);
+  }
+
+  getTimeDisplay(): UserTimeDisplay {
+    return this.timeDisplay;
+  }
+
+  getUserInfo(): string {
+    return `${this.timeDisplay.userLogin}`;
+  }
+  private getCurrentExecution(): { projectName: string; pipelineId: number; runId: number } | null {
+  if (!this.currentExecution) {
+    this.handleTestResultsError(new Error('No execution context available'));
+    return null;
+  }
+  return this.currentExecution;
+ }
+ refreshTestResults(): void {
+  const currentExec = this.getCurrentExecution();
+  if (!currentExec) {
+    this.statusMessage = 'No pipeline execution available to refresh results.';
+    return;
+  }
+
+  this.loadTestResults(currentExec.runId);
+}
   ngOnInit(): void {
     this.loadProjects();
 
@@ -125,8 +187,13 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.stopStatusPolling();
+    if (this.timeUpdateInterval) {
+      clearInterval(this.timeUpdateInterval);
+    }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadProjects(): void {
@@ -154,7 +221,75 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       this.selectedProjectPipelines = {};
     }
   }
+  triggerPipeline(): void {
+    if (!this.selectedProject || !this.selectedPipeline) {
+      return;
+    }
 
+    const projectName = this.selectedProject.Name;
+    const pipelineId = this.selectedPipeline.Id;
+
+    this.currentExecution = {
+      projectName,
+      pipelineId,
+      runId: 0
+    };
+
+    this.pipelineStatus.next({
+      isRunning: true,
+      progress: 0,
+      currentStage: 'Initiating pipeline...'
+    });
+
+    this.testResultsApiService.triggerPipeline(projectName, pipelineId)
+      .subscribe({
+        next: (response: PipelineExecutionResponse) => {
+          this.handlePipelineResponse(response, projectName, pipelineId);
+        },
+        error: (error: Error) => {
+          this.handlePipelineError(error);
+        }
+      });
+}
+private handlePipelineResponse(
+  response: PipelineExecutionResponse, 
+  projectName: string, 
+  pipelineId: number
+): void {
+  if (response.State.toLowerCase() === 'completed') {
+    if (this.currentExecution) {
+      this.currentExecution.runId = response.RunId;
+    }
+    this.loadTestResults(response.RunId);
+  } else {
+    // Change testResultsService to testResultsApiService
+    const pipelineUrl = this.testResultsApiService.getPipelineUrl(projectName, pipelineId);
+    this.statusMessage = `Warning: Pipeline is in state: ${response.State}. 
+      Please check the pipeline logs to fix any issues: <a href="${pipelineUrl}" target="_blank">View Pipeline Details</a>`;
+  }
+  
+  this.pipelineStatus.next({
+    isRunning: false,
+    progress: 100,
+    currentStage: response.State
+  });
+}
+private handlePipelineError(error: Error): void {
+  console.error('Pipeline trigger error:', error);
+  this.statusMessage = `Failed to trigger pipeline: ${error.message}`;
+  this.pipelineStatus.next({
+    isRunning: false,
+    progress: 0,
+    currentStage: 'Error'
+  });
+}
+  onPipelineSelectForRunner(event: Event): void {
+    const pipelineId = +(event.target as HTMLSelectElement).value;
+    if (this.selectedProject) {
+      const pipelines = this.selectedProjectPipelines[this.selectedProject.Id] || [];
+      this.selectedPipeline = pipelines.find(p => p.Id === pipelineId) || null;
+    }
+  }
   private async loadPipelinesForProject(projectId: string): Promise<void> {
     if (!projectId) {
       console.error('Project ID is undefined or empty');
@@ -180,235 +315,63 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPipelineSelectForRunner(event: Event): void {
-    const pipelineId = +(event.target as HTMLSelectElement).value;
-    if (this.selectedProject) {
-      const pipelines = this.selectedProjectPipelines[this.selectedProject.Id] || [];
-      this.selectedPipeline = pipelines.find(p => p.Id === pipelineId) || null;
-    }
-  }
+  private startStatusPolling(runId: number): void {
+    this.stopStatusPolling();
 
-  triggerPipeline(): void {
-    if (!this.selectedProject || !this.selectedPipeline) {
-      return;
-    }
-
-    if (this.isScheduleEnabled) {
-      const scheduledDate = this.schedulePipelineForm.get('scheduledDate')?.value;
-      const scheduledTime = this.schedulePipelineForm.get('scheduledTime')?.value;
-
-      if (!scheduledDate || !scheduledTime) {
-        return;
-      }
-
-      const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
-      this.statusMessage = 'Scheduling pipeline...';
-      this.testResultsApiService.triggerPipeline(
-        this.selectedProject.Name,
-        this.selectedPipeline.Id,
-        scheduledDateTime
-      ).subscribe({
-        next: (response) => {
-          this.statusMessage = `Pipeline scheduled for ${scheduledDateTime.toLocaleString()}`;
-          this.updatePipelineStatus(response);
-        },
-        error: (error: Error) => {
-          console.error('Error scheduling pipeline:', error);
-          this.statusMessage = `Failed to schedule pipeline: ${error.message}`;
-        }
-      });
-    } else {
-      const execution: PipelineExecution = {
-        projectName: this.selectedProject.Name,
-        pipelineId: this.selectedPipeline.Id,
-        runId: 0,
-        status: {
-          isRunning: true,
-          progress: 0,
-          currentStage: 'Initiating pipeline...'
-        }
-      };
-
-      this.currentExecution = {
-        projectName: execution.projectName,
-        pipelineId: execution.pipelineId,
-        runId: execution.runId
-      };
-
-      this.pipelineStatus.next(execution.status);
-      this.pipelineStorageService.saveExecution(execution);
-
-      this.statusMessage = 'Triggering pipeline...';
-      const projectName = this.selectedProject?.Name || '';
-      const pipelineId = this.selectedPipeline?.Id || 0;
-
-      this.testResultsApiService.triggerPipeline(projectName, pipelineId)
-        .subscribe({
-          next: (response: PipelineExecutionResponse) => {
-            this.statusMessage = `Pipeline triggered successfully! Run ID: ${response.RunId}`;
-
-            this.currentExecution = {
-              projectName: projectName,
-              pipelineId: pipelineId,
-              runId: response.RunId
-            };
-
-            this.updatePipelineStatus(response);
-
-            if (this.selectedProject) {
-              this.runPipeline.emit({
-                projectId: this.selectedProject.Id,
-                pipelineId: pipelineId,
-                response: response
-              });
-            }
-          },
-          error: (error: Error) => {
-            console.error('Error triggering pipeline:', error);
-            this.statusMessage = `Failed to trigger pipeline: ${error.message}`;
-            this.pipelineStatus.next({isRunning: false});
-            this.pipelineStorageService.clearExecution();
-          }
-        });
-    }
-  }
-
-  private loadTestResults(runId: number): void {
-    if (!this.currentExecution?.projectName || runId === 0) {
-      this.statusMessage = 'Waiting for pipeline execution to start...';
-      return;
-    }
-    
-    this.testResultsApiService.getTestResults(runId, this.currentExecution.projectName)
-      .subscribe({
-        next: (results) => {
-          if (!results || results.length === 0) {
-            this.statusMessage = 'No test results available yet.';
-            return;
-          }
-
-          this.currentTestResults = {
-            passedCount: results.filter(r => r.Status === 'PASSED').length,
-            failedCount: results.filter(r => r.Status === 'FAILED').length,
-            totalCount: results.length,
-            details: results
-          };
-
-          const failedTests = results.filter(r => r.Status === 'FAILED');
-          this.statusMessage = `Test results loaded: ${this.currentTestResults.passedCount} passed, ${this.currentTestResults.failedCount} failed.`;
-          
-          if (failedTests.length > 0) {
-            this.statusMessage += '\nFailed tests:\n';
-            failedTests.forEach(test => {
-              if (test.Scenario) {
-                this.statusMessage += `- ${test.Feature}: ${test.Scenario}\n`;
-                if (test.ExceptionMessage) {
-                  this.statusMessage += `  Error: ${test.ExceptionMessage}\n`;
-                }
-              }
-            });
-          }
-        },
-        error: (error) => {
-          console.error('Error loading test results:', error);
-          if (error.message.includes('Pipeline execution for build 0 not found')) {
-            this.statusMessage = 'Waiting for pipeline execution to complete...';
-          } else {
-            this.statusMessage = `Error loading test results: ${error.message}`;
-          }
-        }
-      });
-  }
-
-  refreshTestResults(): void {
-    if (!this.currentExecution) {
-      return;
-    }
-
-    this.statusMessage = 'Refreshing test results...';
-    this.testResultsApiService.getTestResults(this.currentExecution.runId, this.currentExecution.projectName)
+    this.statusPolling = timer(0, 10000) // Poll every 10 seconds
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() => {
+          if (!this.currentExecution) return EMPTY;
+          return this.testResultsApiService.getTestResults(
+            runId,
+            this.currentExecution.projectName
+          );
+        })
+      )
       .subscribe({
         next: (results) => {
           if (results && results.length > 0) {
-            this.currentTestResults = {
-              passedCount: results.filter(r => r.Status === 'PASSED').length,
-              failedCount: results.filter(r => r.Status === 'FAILED').length,
-              totalCount: results.length,
-              details: results
-            };
-
-            const failedTests = results.filter(r => r.Status === 'FAILED');
-            if (failedTests.length > 0) {
-              this.statusMessage = `Test results refreshed: ${this.currentTestResults.passedCount} passed\n`;
-              this.statusMessage += 'Failed tests:\n';
-              failedTests.forEach(test => {
-                if (test.Scenario) {
-                  this.statusMessage += `- ${test.Feature}: ${test.Scenario}\n`;
-                  if (test.ExceptionMessage) {
-                    this.statusMessage += `  Error: ${test.ExceptionMessage}\n`;
-                  }
-                }
-              });
-            } else {
-              this.statusMessage = `All tests passed! Total: ${this.currentTestResults.totalCount}`;
-            }
-          } else {
-            this.statusMessage = 'No test results found.';
+            this.updateTestResults(results);
           }
         },
         error: (error) => {
-          console.error('Error refreshing test results:', error);
-          this.statusMessage = `Failed to refresh test results: ${error.message}`;
+          console.error('Error polling test results:', error);
+          this.handleTestResultsError(error);
         }
       });
   }
 
-  private updatePipelineStatus(response: PipelineExecutionResponse): void {
-    if (response.State === 'completed') {
-      if (response.Result === 'succeeded') {
-        this.statusMessage = 'Pipeline execution completed successfully!';
-        this.loadTestResults(response.RunId);
-      } else {
-        this.handleFailedPipeline(response);
-      }
+  private updateTestResults(results: TestStepResult[]): void {
+    this.currentTestResults = {
+      passedCount: results.filter(r => r.Status === 'PASSED').length,
+      failedCount: results.filter(r => r.Status === 'FAILED').length,
+      totalCount: results.length,
+      details: results
+    };
 
-      this.pipelineStatus.next({
-        isRunning: false,
-        progress: 100,
-        currentStage: 'Completed'
-      });
-    } else {
-      this.pipelineStatus.next({
-        isRunning: true,
-        progress: 50,
-        currentStage: response.State
-      });
-    }
-
-    if (this.currentExecution) {
-      this.pipelineStorageService.saveExecution({
-        ...this.currentExecution,
-        status: this.pipelineStatus.value
-      });
-    }
+    this.updateStatusMessage();
   }
 
-   private handleFailedPipeline(response: PipelineExecutionResponse) {
-    this.statusMessage = `Pipeline execution failed with status: ${response.Result}`;
-    if (this.currentExecution) {
-      const pipelineUrl = this.getPipelineUrl(
-        this.currentExecution.projectName, 
-        this.currentExecution.pipelineId
-      );
-      this.statusMessage += ` <a href="${pipelineUrl}" target="_blank">View in Azure DevOps</a>`;
+  private updateStatusMessage(): void {
+    if (!this.currentTestResults) return;
+
+    this.statusMessage = `Test results updated: ${this.currentTestResults.passedCount} passed, ${this.currentTestResults.failedCount} failed.`;
+    
+    const failedTests = this.currentTestResults.details.filter(r => r.Status === 'FAILED');
+    if (failedTests.length > 0) {
+      this.statusMessage += '\nFailed tests:\n';
+      failedTests.forEach(test => {
+        if (test.Scenario) {
+          this.statusMessage += `- ${test.Feature}: ${test.Scenario}\n`;
+          if (test.ExceptionMessage) {
+            this.statusMessage += `  Error: ${test.ExceptionMessage}\n`;
+          }
+        }
+      });
     }
   }
-
-  private getPipelineUrl(projectName: string, pipelineId: number): string {
-    return `https://ced-cloud-tfs.visualstudio.com/${projectName}/_build?definitionId=${pipelineId}`;
-  }
-
-  downloadHtmlReport(): void {
+downloadHtmlReport(): void {
     if (!this.currentExecution || this.currentExecution.runId === 0) {
       this.statusMessage = 'No pipeline execution available to download report.';
       return;
@@ -474,8 +437,30 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  getTestRowClass(status: string): string {
+  private handleTestResultsError(error: any): void {
+    if (error.message.includes('Pipeline execution for build 0 not found')) {
+      this.statusMessage = 'Waiting for pipeline execution to complete...';
+    } else {
+      this.statusMessage = `Error loading test results: ${error.message}`;
+      this.stopStatusPolling();
+    }
+  }
+clearLocalState(): void {
+  this.stopStatusPolling();
+  this.pipelineStorageService.clearExecution();
+  this.currentExecution = null;
+  this.pipelineStatus.next({ isRunning: false });
+  this.statusMessage = 'Local state cleared. You can now trigger a new pipeline.';
+  this.currentTestResults = null;
+  this.loadProjects();
+}
+  private stopStatusPolling(): void {
+    if (this.statusPolling) {
+      this.statusPolling.unsubscribe();
+      this.statusPolling = undefined;
+    }
+  }
+getTestRowClass(status: string): string {
     switch (status) {
       case 'PASSED': return 'table-success';
       case 'FAILED': return 'table-danger';
@@ -492,20 +477,20 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       default: return 'badge bg-secondary';
     }
   }
-  private stopStatusPolling() {
-    if (this.statusPolling) {
-      this.statusPolling.unsubscribe();
-      this.statusPolling = undefined;
-    }
+  private loadTestResults(runId: number): void {
+    if (!this.currentExecution) return;
+
+    this.testResultsApiService.getTestResults(runId, this.currentExecution.projectName)
+      .subscribe({
+        next: (results) => {
+          if (results && results.length > 0) {
+            this.updateTestResults(results);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading test results:', error);
+          this.handleTestResultsError(error);
+        }
+      });
   }
-clearLocalState(): void {
-  this.stopStatusPolling();
-  this.pipelineStorageService.clearExecution();
-  this.currentExecution = null;
-  this.pipelineStatus.next({ isRunning: false });
-  this.statusMessage = 'Local state cleared. You can now trigger a new pipeline.';
-  this.currentTestResults = null;
-  this.loadProjects();
-}
-  
 }
