@@ -259,6 +259,24 @@
   animation: fadeIn 0.2s ease-in-out;
 }
 
+/* Password display styling */
+.password-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.password-display .btn-link {
+  padding: 0;
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.password-display .btn-link:hover {
+  color: #0b5ed7;
+  text-decoration: underline;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

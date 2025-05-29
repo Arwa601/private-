@@ -3,7 +3,10 @@
     <!-- Left Column: Pipeline Control -->
     <div class="col-md-5 mb-4">
       <h2>Trigger Azure DevOps Pipeline</h2>
-      <p class="text-muted mb-4">Select a project and pipeline to trigger a build</p>
+      <p *ngIf="currentExecution?.pipelineName" class="text-info mb-4">
+        Selected Pipeline: {{currentExecution?.pipelineName}}
+      </p>
+      <p class="text-muted mb-4" *ngIf="!currentExecution?.pipelineName">Select a project and pipeline to trigger a build</p>
 
       <!-- Project Selection -->
       <div class="card mb-4">
@@ -104,9 +107,9 @@
           <button class="btn btn-primary" (click)="downloadHtmlReport()" [disabled]="!currentExecution">
             <i class="bi bi-download me-2"></i>Download HTML Report
           </button>
-          <a *ngIf="currentExecution?.runId &&currentExecution?.projectName" 
+          <a *ngIf="currentExecution?.runId && currentExecution?.projectName" 
              [routerLink]="['/app/dashboard/overview']" 
-             [queryParams]="{build_id: currentExecution?.runId,projectname:currentExecution?.projectName}"
+             [queryParams]="{build_id: currentExecution?.runId, projectname: currentExecution?.projectName}"
              class="btn btn-success">
             <i class="bi bi-bar-chart me-2"></i>View in Dashboard
           </a>
@@ -124,7 +127,7 @@
                     [disabled]="!currentExecution">
               <i class="bi bi-arrow-clockwise me-1"></i>Refresh
             </button>
-          <button class="btn btn-outline-secondary btn-sm" (click)="clearLocalState()" color="secondary">Clear</button>
+            <button class="btn btn-outline-secondary btn-sm" (click)="clearLocalState()" color="secondary">Clear</button>
           </div>
         </div>
         

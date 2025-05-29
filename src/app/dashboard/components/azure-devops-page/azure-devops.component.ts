@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, lastValueFrom, Subscription, timer, EMPTY } from 'rxjs';
+import { BehaviorSubject, lastValueFrom, Subscription, EMPTY } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -22,7 +22,6 @@ import { TestResultsApiService, PipelineExecutionResponse } from '../../services
 import { TestStepResult } from '../../models/test-results-data';
 import { AzureDevOpsService, AzureProject, AzurePipeline } from '../../../services/Azure/azure-devops.service';
 import { PipelineStorageService, PipelineExecution } from '../../services/pipeline-storage.service';
-import { PipelineStatusService } from '../../services/pipeline-status.service';
 
 interface DownloadResult {
   type: 'blob' | 'auth';
@@ -54,7 +53,6 @@ interface DownloadResult {
 export class AzureDevopsComponent implements OnInit, OnDestroy {
   @Output() runPipeline = new EventEmitter<{projectId: string, pipelineId: number, response: PipelineExecutionResponse}>();
 
-  private timeUpdateInterval?: number;
   private destroy$ = new Subject<void>();
 
   pipelineStatus = new BehaviorSubject<{isRunning: boolean, progress?: number, currentStage?: string}>({isRunning: false});
@@ -77,18 +75,17 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
   currentExecution: {
     projectName: string;
     pipelineId: number;
+    pipelineName: string;
     runId: number;
   } | null = null;
-  
+
   debugMode: boolean = false;
-  private statusPolling?: Subscription;
 
   constructor(
     private testResultsApiService: TestResultsApiService,
     private AzureDevOpsService: AzureDevOpsService,
     private formBuilder: FormBuilder,
     private pipelineStorageService: PipelineStorageService,
-    private pipelineStatusService: PipelineStatusService,
     private domSanitizer: DomSanitizer
   ) {
     this.initializeForm();
@@ -115,13 +112,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private formatUTCDateTime(date: Date): string {
-    return date.toISOString()
-      .replace('T', ' ')
-      .slice(0, 19);
-  }
-
-  private getCurrentExecution(): { projectName: string; pipelineId: number; runId: number } | null {
+  private getCurrentExecution(): { projectName: string; pipelineId: number; pipelineName: string; runId: number } | null {
     if (!this.currentExecution) {
       this.handleTestResultsError(new Error('No execution context available'));
       return null;
@@ -147,6 +138,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       this.currentExecution = {
         projectName: savedExecution.projectName,
         pipelineId: savedExecution.pipelineId,
+        pipelineName: savedExecution.pipelineName || '',
         runId: savedExecution.runId
       };
       this.pipelineStatus.next(savedExecution.status);
@@ -157,10 +149,6 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.stopStatusPolling();
-    if (this.timeUpdateInterval) {
-      clearInterval(this.timeUpdateInterval);
-    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -198,17 +186,50 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
 
     const projectName = this.selectedProject.Name;
     const pipelineId = this.selectedPipeline.Id;
+    const pipelineName = this.selectedPipeline.Name;
 
     this.currentExecution = {
       projectName,
       pipelineId,
+      pipelineName,
       runId: 0
     };
 
+    if (this.isScheduleEnabled) {
+      const scheduledDate = this.schedulePipelineForm.get('scheduledDate')?.value;
+      const scheduledTime = this.schedulePipelineForm.get('scheduledTime')?.value;
+      if (scheduledDate && scheduledTime) {
+        const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+        const now = new Date();
+        const delay = scheduledDateTime.getTime() - now.getTime();
+
+        if (delay <= 0) {
+          this.statusMessage = 'Scheduled time is in the past. Triggering pipeline immediately.';
+        } else {
+          this.statusMessage = `Pipeline scheduled for ${scheduledDateTime.toLocaleString()}.`;
+          setTimeout(() => {
+            this.executePipeline(projectName, pipelineId);
+          }, delay);
+          return;
+        }
+      }
+    }
+
+    this.executePipeline(projectName, pipelineId);
+  }
+
+  private executePipeline(projectName: string, pipelineId: number): void {
     this.pipelineStatus.next({
       isRunning: true,
-      progress: 0,
-      currentStage: 'Initiating pipeline...'
+      currentStage: 'triggering pipeline...'
+    });
+
+    this.pipelineStorageService.saveExecution({
+      projectName,
+      pipelineId,
+      pipelineName: this.currentExecution?.pipelineName || '', // Fixed shorthand property
+      runId: 0,
+      status: { isRunning: true, currentStage: 'triggering pipeline...' }
     });
 
     this.testResultsApiService.triggerPipeline(projectName, pipelineId)
@@ -223,32 +244,48 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
   }
 
   private handlePipelineResponse(
-    response: PipelineExecutionResponse, 
-    projectName: string, 
-    pipelineId: number
+    response: PipelineExecutionResponse,
+    projectName: string,
+    pipelineId: number,
   ): void {
-    // Always set the status message with the current state
     this.statusMessage = `Pipeline triggered. Current state: ${response.State}`;
     const pipelineUrl = this.testResultsApiService.getPipelineUrl(projectName, pipelineId);
     this.statusMessage += ` <br>Check the pipeline logs for more details: <a href="${pipelineUrl}" target="_blank">View Pipeline Details</a>`;
 
-    if (response.State.toLowerCase() === 'completed') {
-      if (this.currentExecution) {
-        this.currentExecution.runId = response.RunId;
-      }
-      this.loadTestResults(response.RunId);
+    if (this.currentExecution) {
+      this.currentExecution.runId = response.RunId;
+      this.pipelineStorageService.saveExecution({
+        projectName,
+        pipelineId,
+        pipelineName: this.currentExecution.pipelineName,
+        runId: response.RunId,
+        status: { isRunning: response.State.toLowerCase() !== 'completed', progress: 100, currentStage: response.State }
+      });
     }
-    
+
     this.pipelineStatus.next({
-      isRunning: false,
-      progress: 100,
+      isRunning: response.State.toLowerCase() !== 'completed',
+      progress: response.State.toLowerCase() === 'completed' ? 100 : 10,
       currentStage: response.State
     });
+
+    if (response.State.toLowerCase() === 'completed' && response.RunId > 0) {
+      this.loadTestResults(response.RunId);
+    }
   }
 
   private handlePipelineError(error: Error): void {
     console.error('Pipeline trigger error:', error);
     this.statusMessage = `Failed to trigger pipeline: ${error.message}`;
+    if (this.currentExecution) {
+      this.pipelineStorageService.saveExecution({
+        projectName: this.currentExecution.projectName,
+        pipelineId: this.currentExecution.pipelineId,
+        pipelineName: this.currentExecution.pipelineName,
+        runId: this.currentExecution.runId,
+        status: { isRunning: false, progress: 0, currentStage: 'Error' }
+      });
+    }
     this.pipelineStatus.next({
       isRunning: false,
       progress: 0,
@@ -289,20 +326,10 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private startStatusPolling(runId: number): void {
-    this.stopStatusPolling();
+  private loadTestResults(runId: number): void {
+    if (!this.currentExecution) return;
 
-    this.statusPolling = timer(0, 10000) // Poll every 10 seconds
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap(() => {
-          if (!this.currentExecution) return EMPTY;
-          return this.testResultsApiService.getTestResults(
-            runId,
-            this.currentExecution.projectName
-          );
-        })
-      )
+    this.testResultsApiService.getTestResults(runId, this.currentExecution.projectName)
       .subscribe({
         next: (results) => {
           if (results && results.length > 0) {
@@ -310,7 +337,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error polling test results:', error);
+          console.error('Error loading test results:', error);
           this.handleTestResultsError(error);
         }
       });
@@ -361,15 +388,13 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       switchMap(downloadUrl => {
         this.statusMessage = 'Downloading report...';
         const url = new URL(downloadUrl);
-        url.searchParams.set('$format', 'zip');
+        url.searchParams.set('$format', 'Zip');
         return this.testResultsApiService.downloadFromAzureDevOps(url.toString());
       })
     ).subscribe({
       next: (result: DownloadResult) => {
         if (result.type === 'auth') {
           const downloadUrl = result.data as string;
-          const safeUrl = this.domSanitizer.bypassSecurityTrustUrl(downloadUrl);
-          
           this.statusMessage = `Authentication required. Please <a href="${downloadUrl}" target="_blank">login to Azure DevOps</a> first, then try downloading again.`;
           
           if (typeof result.data === 'string') {
@@ -387,7 +412,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `test-report-${this.currentExecution?.runId}.zip`;
+        a.download = `test-report-${this.currentExecution?.runId}.Zip`;
         
         try {
           document.body.appendChild(a);
@@ -418,25 +443,16 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       this.statusMessage = 'Waiting for pipeline execution to complete...';
     } else {
       this.statusMessage = `Error loading test results: ${error.message}`;
-      this.stopStatusPolling();
     }
   }
 
   clearLocalState(): void {
-    this.stopStatusPolling();
     this.pipelineStorageService.clearExecution();
     this.currentExecution = null;
-    this.pipelineStatus.next({ isRunning: false });
+    this.pipelineStatus.next({ isRunning: false, progress: 0, currentStage: '' });
     this.statusMessage = 'Local state cleared. You can now trigger a new pipeline.';
     this.currentTestResults = null;
     this.loadProjects();
-  }
-
-  private stopStatusPolling(): void {
-    if (this.statusPolling) {
-      this.statusPolling.unsubscribe();
-      this.statusPolling = undefined;
-    }
   }
 
   getTestRowClass(status: string): string {
@@ -455,22 +471,5 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       case 'SKIPPED': return 'badge bg-warning text-dark';
       default: return 'badge bg-secondary';
     }
-  }
-
-  private loadTestResults(runId: number): void {
-    if (!this.currentExecution) return;
-
-    this.testResultsApiService.getTestResults(runId, this.currentExecution.projectName)
-      .subscribe({
-        next: (results) => {
-          if (results && results.length > 0) {
-            this.updateTestResults(results);
-          }
-        },
-        error: (error) => {
-          console.error('Error loading test results:', error);
-          this.handleTestResultsError(error);
-        }
-      });
   }
 }

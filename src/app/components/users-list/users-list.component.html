@@ -11,16 +11,16 @@
   </div>
 </div>
 
-<!-- Search and Filter Controls - Simplified -->
+<!-- Search and Filter Controls -->
 <div class="card mb-3 shadow-sm">
   <div class="card-body p-2">
     <div class="row g-2 align-items-center">
       <div class="col-md-5">
         <div class="input-group">
           <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control" placeholder="Search users..." 
+          <input type="text" class="form-control" placeholder="Search users..."
                  (input)="onSearch($any($event.target).value)">
-          <button class="btn btn-outline-secondary" type="button" (click)="onSearch('')" 
+          <button class="btn btn-outline-secondary" type="button" (click)="onSearch('')"
                   *ngIf="searchTerm">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -28,17 +28,17 @@
       </div>
       <div class="col-md-4">
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm" 
+          <button type="button" class="btn btn-sm"
                   [ngClass]="currentView === 'all' ? 'btn-primary' : 'btn-outline-primary'"
                   (click)="setViewFilter('all')">
             All
           </button>
-          <button type="button" class="btn btn-sm" 
+          <button type="button" class="btn btn-sm"
                   [ngClass]="currentView === 'active' ? 'btn-success' : 'btn-outline-success'"
                   (click)="setViewFilter('active')">
             Active
           </button>
-          <button type="button" class="btn btn-sm" 
+          <button type="button" class="btn btn-sm"
                   [ngClass]="currentView === 'inactive' ? 'btn-secondary' : 'btn-outline-secondary'"
                   (click)="setViewFilter('inactive')">
             Inactive
@@ -46,12 +46,12 @@
         </div>
       </div>
       <div class="col-md-3 d-flex justify-content-end gap-2">
-        <button class="btn btn-sm btn-outline-secondary" 
+        <button class="btn btn-sm btn-outline-secondary"
                 (click)="loadUsers()" title="Refresh list">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
         <div class="dropdown">
-          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                   data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-sort-down"></i>
           </button>
@@ -67,7 +67,7 @@
   </div>
 </div>
 
-<!-- Feedback Messages - Simplified -->
+<!-- Feedback Messages -->
 <div class="mb-3">
   <!-- Search Results Info -->
   <div *ngIf="!isLoading && filteredUsers.length > 0" class="d-flex justify-content-between align-items-center small text-muted">
@@ -107,7 +107,7 @@
   </div>
 </div>
 
-<!-- Desktop Table View - Streamlined -->
+<!-- Desktop Table View -->
 <div *ngIf="!isLoading && !isMobile && users.length > 0" class="table-responsive mb-3">
   <table class="table table-hover align-middle table-sm">
     <thead class="table-light">
@@ -116,6 +116,7 @@
         <th>Contact & Role</th>
         <th>Status</th>
         <th>Projects</th>
+        <th>Password</th>
         <th class="text-end">Actions</th>
       </tr>
     </thead>
@@ -139,7 +140,7 @@
           <span class="badge bg-light text-dark border">{{ user.Role }}</span>
         </td>
         <td>
-          <span class="badge" 
+          <span class="badge"
                 [ngClass]="user.Status === 'Active' ? 'bg-success' : 'bg-secondary'">
             {{ user.Status }}
           </span>
@@ -159,21 +160,32 @@
           <ng-template #noProjects>
             <span class="text-muted small">No projects</span>
           </ng-template>
-        </td>        <td class="text-end">
+        </td>
+        <td>
+          <div class="d-flex align-items-center">
+            <span class="text-muted small me-2">
+              {{ user.showPassword ? user.Password || 'No password set' : '••••••••' }}
+            </span>
+            <button class="btn btn-sm btn-link p-0" (click)="togglePasswordVisibility(user)">
+              <i class="bi" [ngClass]="user.showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </td>
+        <td class="text-end">
           <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-secondary" 
+            <button class="btn btn-outline-secondary"
                     [disabled]="!user.Id"
                     title="View details"
                     (click)="showUserDetails(user)">
               <i class="bi bi-eye"></i>
             </button>
-            <button class="btn btn-outline-primary" 
+            <button class="btn btn-outline-primary"
                     [disabled]="!user.Id || !user.Projects || user.Projects.length === 0"
                     title="Manage permissions"
                     (click)="showPermissionsMenu(user, $event)">
               <i class="bi bi-shield-lock"></i>
             </button>
-            <button class="btn btn-outline-danger" 
+            <button class="btn btn-outline-danger"
                     [disabled]="!user.Id"
                     title="Delete user"
                     (click)="onRemoveUserClick(user)">
@@ -186,7 +198,7 @@
   </table>
 </div>
 
-<!-- Mobile Card View - Simplified -->
+<!-- Mobile Card View -->
 <div *ngIf="!isLoading && isMobile && users.length > 0" class="mobile-cards">
   <div *ngFor="let user of filteredUsers" class="card mb-2 shadow-sm" [ngClass]="{'border-warning': !user.Id}">
     <div class="card-body p-2">
@@ -204,7 +216,7 @@
           {{ user.Status }}
         </span>
       </div>
-      
+
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
           <span class="badge bg-light text-dark border">{{ user.Role }}</span>
@@ -212,25 +224,34 @@
             {{ user.Projects.length }} project(s)
           </small>
         </div>
-          <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" 
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary"
                   [disabled]="!user.Id"
                   (click)="showUserDetails(user)">
             <i class="bi bi-eye"></i>
           </button>
-          <button class="btn btn-outline-primary" 
+          <button class="btn btn-outline-primary"
                   [disabled]="!user.Id || !user.Projects || user.Projects.length === 0"
                   (click)="showPermissionsMenu(user, $event)">
             <i class="bi bi-shield-lock"></i>
           </button>
-          <button class="btn btn-outline-danger" 
+          <button class="btn btn-outline-danger"
                   [disabled]="!user.Id"
                   (click)="onRemoveUserClick(user)">
             <i class="bi bi-trash"></i>
           </button>
         </div>
       </div>
-      
+      <div>
+        <small>Password: 
+          <span class="text-muted">
+            {{ user.showPassword ? user.Password || 'No password set' : '••••••••' }}
+          </span>
+          <button class="btn btn-sm btn-link p-0 ms-2" (click)="togglePasswordVisibility(user)">
+            <i class="bi" [ngClass]="user.showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          </button>
+        </small>
+      </div>
       <small *ngIf="!user.Id" class="d-block text-danger">
         <i class="bi bi-exclamation-triangle-fill me-1"></i><strong>Incomplete account</strong>
       </small>
@@ -249,7 +270,7 @@
   (save)="savePermissions($event)">
 </app-permissions-modal>
 
-<!-- User Details Modal - Streamlined -->
+<!-- User Details Modal -->
 <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" *ngIf="selectedUser">
@@ -276,7 +297,29 @@
             </div>
           </div>
         </div>
-        
+
+        <!-- Password Section -->
+        <div class="card mb-3">
+          <div class="card-header bg-light py-2">
+            <h6 class="mb-0">
+              <i class="bi bi-key me-1"></i> Password
+            </h6>
+          </div>
+          <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-muted small">
+                  {{ selectedUser.showPassword ? selectedUser.Password || 'No password set' : '••••••••' }}
+                </span>
+              </div>
+              <button class="btn btn-sm btn-link p-0" (click)="togglePasswordVisibility(selectedUser)">
+                <i class="bi" [ngClass]="selectedUser.showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Access Details Section -->
         <div class="card mb-0">
           <div class="card-header bg-light py-2">
             <h6 class="mb-0">
@@ -287,7 +330,6 @@
             <p *ngIf="!selectedUser.Projects || selectedUser.Projects.length === 0" class="text-muted small mb-0">
               No projects assigned to this user.
             </p>
-            
             <div *ngIf="selectedUser.Projects && selectedUser.Projects.length > 0" class="projects-container small">
               <div *ngFor="let project of selectedUser.Projects" class="mb-2">
                 <div class="d-flex align-items-center">
@@ -295,8 +337,8 @@
                   <strong>{{ project.Name }}</strong>
                   <span class="ms-1 badge bg-light text-dark border">{{ project.Pipelines.length }} pipelines</span>
                 </div>
-                
-                <div class="table-responsive mt-1" *ngIf="project.Pipelines.length > 0">                  <table class="table table-sm table-bordered mb-0">
+                <div class="table-responsive mt-1" *ngIf="project.Pipelines.length > 0">
+                  <table class="table table-sm table-bordered mb-0">
                     <thead class="table-light">
                       <tr>
                         <th>Pipeline</th>
@@ -311,22 +353,23 @@
                       <tr *ngFor="let pipeline of project.Pipelines">
                         <td class="small">{{ pipeline.Name }}</td>
                         <td class="text-center">
-                          <i class="bi" 
+                          <i class="bi"
                              [ngClass]="pipeline.Permissions.CanViewHistory ? 'bi-check text-success' : 'bi-x text-danger'"></i>
                         </td>
                         <td class="text-center">
-                          <i class="bi" 
+                          <i class="bi"
                              [ngClass]="pipeline.Permissions.CanTrigger ? 'bi-check text-success' : 'bi-x text-danger'"></i>
                         </td>
                         <td class="text-center">
-                          <i class="bi" 
+                          <i class="bi"
                              [ngClass]="pipeline.Permissions.CanViewResults ? 'bi-check text-success' : 'bi-x text-danger'"></i>
                         </td>
                         <td class="text-center">
-                          <i class="bi" 
+                          <i class="bi"
                              [ngClass]="pipeline.Permissions.CanDownloadReport ? 'bi-check text-success' : 'bi-x text-danger'"></i>
-                        </td>                        <td class="text-center">
-                          <button class="btn btn-sm btn-outline-primary" 
+                        </td>
+                        <td class="text-center">
+                          <button class="btn btn-sm btn-outline-primary"
                                   (click)="onEditPermissionsFromDetails(selectedUser, project, pipeline)"
                                   title="Edit permissions">
                             <i class="bi bi-pencil-square"></i>
@@ -340,7 +383,8 @@
             </div>
           </div>
         </div>
-      </div>      <div class="modal-footer py-2">
+      </div>
+      <div class="modal-footer py-2">
         <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>

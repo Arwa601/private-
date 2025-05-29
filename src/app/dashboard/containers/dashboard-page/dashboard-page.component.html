@@ -6,16 +6,19 @@
   </mat-toolbar>
 </mat-card>
 
-
-
 <mat-card class="results-card">
   <mat-card-header>
     <mat-card-title>Test Results Summary</mat-card-title>
-       <div class="project-info" *ngIf="currentExecution?.projectName">
+    <div class="project-info" *ngIf="currentExecution?.projectName || selectedPipeline?.Name">
       <span class="project-details">
-        Project: {{ currentExecution?.projectName }} 
-        <ng-container *ngIf="selectedPipeline">
-          | Pipeline: {{ selectedPipeline.Name }}
+        <ng-container *ngIf="currentExecution?.projectName">
+          Project: {{ currentExecution?.projectName }}
+        </ng-container>
+        <ng-container *ngIf="currentExecution?.projectName && selectedPipeline?.Name">
+          |
+        </ng-container>
+        <ng-container *ngIf="selectedPipeline?.Name">
+          Pipeline: {{ selectedPipeline?.Name }}
         </ng-container>
       </span>
     </div>
@@ -68,46 +71,46 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
       
-     <table mat-table [dataSource]="dataSource" matSort class="results-table">
-  <!-- Existing columns -->
-  <ng-container matColumnDef="feature">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Feature</th>
-    <td mat-cell *matCellDef="let result">{{ result.feature }}</td>
-  </ng-container>
+      <table mat-table [dataSource]="dataSource" matSort class="results-table">
+        <!-- Existing columns -->
+        <ng-container matColumnDef="feature">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Feature</th>
+          <td mat-cell *matCellDef="let result">{{ result.feature }}</td>
+        </ng-container>
 
-  <ng-container matColumnDef="scenario">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Scenario</th>
-    <td mat-cell *matCellDef="let result">{{ result.scenario }}</td>
-  </ng-container>
+        <ng-container matColumnDef="scenario">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Scenario</th>
+          <td mat-cell *matCellDef="let result">{{ result.scenario }}</td>
+        </ng-container>
 
-  <ng-container matColumnDef="status">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-    <td mat-cell *matCellDef="let result">
-      <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
-    </td>
-  </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let result">
+            <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
+          </td>
+        </ng-container>
 
-  <ng-container matColumnDef="exceptionType">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Type</th>
-    <td mat-cell *matCellDef="let result">{{ result.exceptionType || '-' }}</td>
-  </ng-container>
+        <ng-container matColumnDef="exceptionType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Type</th>
+          <td mat-cell *matCellDef="let result">{{ result.exceptionType || '-' }}</td>
+        </ng-container>
 
-  <!-- Add the new ExceptionMessage column -->
-  <ng-container matColumnDef="exceptionMessage">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Message</th>
-    <td mat-cell *matCellDef="let result" class="error-message-cell">
-      <div class="error-message-content" [class.has-error]="result.exceptionMessage">
-        {{ result.exceptionMessage || '-' }}
-      </div>
-    </td>
-  </ng-container>
+        <!-- Add the new ExceptionMessage column -->
+        <ng-container matColumnDef="exceptionMessage">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Message</th>
+          <td mat-cell *matCellDef="let result" class="error-message-cell">
+            <div class="error-message-content" [class.has-error]="result.exceptionMessage">
+              {{ result.exceptionMessage || '-' }}
+            </div>
+          </td>
+        </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-      [ngClass]="{'failed-row': row.status === 'FAILED', 'passed-row': row.status === 'PASSED'}"
-      (click)="viewTestDetails(row)"
-      class="clickable-row"></tr>
-  </table>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [ngClass]="{'failed-row': row.status === 'FAILED', 'passed-row': row.status === 'PASSED'}"
+            (click)="viewTestDetails(row)"
+            class="clickable-row"></tr>
+      </table>
 
       <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
     </div>
