@@ -11,6 +11,14 @@
 <mat-card class="results-card">
   <mat-card-header>
     <mat-card-title>Test Results Summary</mat-card-title>
+       <div class="project-info" *ngIf="currentExecution?.projectName">
+      <span class="project-details">
+        Project: {{ currentExecution?.projectName }} 
+        <ng-container *ngIf="selectedPipeline">
+          | Pipeline: {{ selectedPipeline.Name }}
+        </ng-container>
+      </span>
+    </div>
     <div class="header-actions">
       <button mat-raised-button color="primary" (click)="triggerPipeline()">
         <mat-icon>play_arrow</mat-icon>

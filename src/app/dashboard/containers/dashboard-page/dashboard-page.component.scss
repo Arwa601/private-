@@ -23,11 +23,9 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 
-    mat-icon {
+    i {
       color: $gray-60;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+      font-size: 18px;
     }
 
     span {
@@ -35,6 +33,7 @@
       font-size: 14px;
       font-weight: $font-weight-medium;
       white-space: nowrap;
+      font-family: 'Roboto Mono', monospace;
     }
   }
 
@@ -61,21 +60,41 @@
 
   mat-card-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
     padding: 16px;
     background-color: #f5f5f5;
     border-bottom: 1px solid $light-grey;
-  }
 
-  .header-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 10px;
-    
-    .trigger-btn {
-      background-color: #7b1fa2;
-      color: white;
+    .header-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+
+      mat-card-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: $font-weight-medium;
+      }
+
+      .project-info {
+        .project-details {
+          font-size: 14px;
+          color: $gray-70;
+          font-weight: $font-weight-medium;
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-self: flex-end;
+      
+      .trigger-btn {
+        background-color: #7b1fa2;
+        color: white;
+      }
     }
   }
 }
@@ -148,6 +167,7 @@ mat-card-content {
 .table-container {
   overflow-x: auto;
   width: 100%;
+  margin-top: 16px;
 
   table {
     width: 100%;
@@ -176,6 +196,19 @@ mat-card-content {
           border-radius: 4px;
           font-family: 'Roboto Mono', monospace;
         }
+      }
+    }
+
+    td.mat-cell,
+    th.mat-header-cell {
+      padding: 12px;
+      
+      &:first-child {
+        padding-left: 24px;
+      }
+      
+      &:last-child {
+        padding-right: 24px;
       }
     }
   }
@@ -235,7 +268,7 @@ mat-card-content {
   color: #c5221f;
 }
 
-// Header Styles
+// Page Header Styles
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -243,28 +276,16 @@ mat-card-content {
   background: none;
   height: auto;
 
-  @media (max-width: $small) {
-    flex-direction: column;
-    align-items: baseline;
-    padding: 0;
+  .title-inner-wrapper {
+    display: flex;
+    align-items: center;
+
+    .title-text {
+      margin: 0;
+      font-size: 20px;
+      font-weight: $font-weight-medium;
+    }
   }
-}
-
-// Title Styles
-.title-inner-wrapper {
-  display: flex;
-  align-items: center;
-
-  @media (max-width: $normal) {
-    flex-wrap: wrap;
-  }
-}
-
-.title-text {
-  margin-right: 24px;
-  margin-bottom: 0;
-  font-size: 20px;
-  font-weight: $font-weight-medium;
 }
 
 // Filter Field
@@ -300,12 +321,20 @@ mat-card-content {
     margin: 12px;
     
     mat-card-header {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
+      padding: 12px;
+      
+      .header-content {
+        margin-bottom: 8px;
+      }
       
       .header-actions {
-        margin-left: 0;
+        align-self: stretch;
+        flex-direction: column;
+        gap: 8px;
+        
+        button {
+          width: 100%;
+        }
       }
     }
   }
@@ -315,13 +344,8 @@ mat-card-content {
       width: 100%;
     }
   }
-}
 
-// Make sure table is scrollable on mobile
-.table-container {
-  margin-top: 16px;
-  
-  @media (max-width: $small) {
+  .table-container {
     margin-top: 8px;
     
     table {
@@ -338,5 +362,11 @@ mat-card-content {
         }
       }
     }
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: baseline;
+    padding: 12px;
   }
 }

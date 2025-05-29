@@ -89,9 +89,6 @@
             </div>
             <span>Current Stage: {{(pipelineStatus | async)?.currentStage || 'Initializing'}}</span>
           </div>
-          <div class="text-end mt-2 text-muted">
-            <small>Progress: {{(pipelineStatus | async)?.progress || 0}}%</small>
-          </div>
         </div>
       </div>
 

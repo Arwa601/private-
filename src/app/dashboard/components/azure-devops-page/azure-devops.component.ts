@@ -29,7 +29,6 @@ interface DownloadResult {
   data: Blob | string;
 }
 
-
 @Component({
   selector: 'app-simple-pipeline-selector',
   templateUrl: './simple-pipeline-selector.html',
@@ -115,29 +114,31 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       }
     });
   }
+
   private formatUTCDateTime(date: Date): string {
     return date.toISOString()
       .replace('T', ' ')
       .slice(0, 19);
   }
 
-
   private getCurrentExecution(): { projectName: string; pipelineId: number; runId: number } | null {
-  if (!this.currentExecution) {
-    this.handleTestResultsError(new Error('No execution context available'));
-    return null;
-  }
-  return this.currentExecution;
- }
- refreshTestResults(): void {
-  const currentExec = this.getCurrentExecution();
-  if (!currentExec) {
-    this.statusMessage = 'No pipeline execution available to refresh results.';
-    return;
+    if (!this.currentExecution) {
+      this.handleTestResultsError(new Error('No execution context available'));
+      return null;
+    }
+    return this.currentExecution;
   }
 
-  this.loadTestResults(currentExec.runId);
-}
+  refreshTestResults(): void {
+    const currentExec = this.getCurrentExecution();
+    if (!currentExec) {
+      this.statusMessage = 'No pipeline execution available to refresh results.';
+      return;
+    }
+
+    this.loadTestResults(currentExec.runId);
+  }
+
   ngOnInit(): void {
     this.loadProjects();
 
@@ -189,6 +190,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       this.selectedProjectPipelines = {};
     }
   }
+
   triggerPipeline(): void {
     if (!this.selectedProject || !this.selectedPipeline) {
       return;
@@ -218,39 +220,42 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
           this.handlePipelineError(error);
         }
       });
-}
-private handlePipelineResponse(
-  response: PipelineExecutionResponse, 
-  projectName: string, 
-  pipelineId: number
-): void {
-  if (response.State.toLowerCase() === 'completed') {
-    if (this.currentExecution) {
-      this.currentExecution.runId = response.RunId;
-    }
-    this.loadTestResults(response.RunId);
-  } else {
-    // Change testResultsService to testResultsApiService
-    const pipelineUrl = this.testResultsApiService.getPipelineUrl(projectName, pipelineId);
-    this.statusMessage = `Warning: Pipeline is in state: ${response.State}. 
-      Please check the pipeline logs to fix any issues: <a href="${pipelineUrl}" target="_blank">View Pipeline Details</a>`;
   }
-  
-  this.pipelineStatus.next({
-    isRunning: false,
-    progress: 100,
-    currentStage: response.State
-  });
-}
-private handlePipelineError(error: Error): void {
-  console.error('Pipeline trigger error:', error);
-  this.statusMessage = `Failed to trigger pipeline: ${error.message}`;
-  this.pipelineStatus.next({
-    isRunning: false,
-    progress: 0,
-    currentStage: 'Error'
-  });
-}
+
+  private handlePipelineResponse(
+    response: PipelineExecutionResponse, 
+    projectName: string, 
+    pipelineId: number
+  ): void {
+    // Always set the status message with the current state
+    this.statusMessage = `Pipeline triggered. Current state: ${response.State}`;
+    const pipelineUrl = this.testResultsApiService.getPipelineUrl(projectName, pipelineId);
+    this.statusMessage += ` <br>Check the pipeline logs for more details: <a href="${pipelineUrl}" target="_blank">View Pipeline Details</a>`;
+
+    if (response.State.toLowerCase() === 'completed') {
+      if (this.currentExecution) {
+        this.currentExecution.runId = response.RunId;
+      }
+      this.loadTestResults(response.RunId);
+    }
+    
+    this.pipelineStatus.next({
+      isRunning: false,
+      progress: 100,
+      currentStage: response.State
+    });
+  }
+
+  private handlePipelineError(error: Error): void {
+    console.error('Pipeline trigger error:', error);
+    this.statusMessage = `Failed to trigger pipeline: ${error.message}`;
+    this.pipelineStatus.next({
+      isRunning: false,
+      progress: 0,
+      currentStage: 'Error'
+    });
+  }
+
   onPipelineSelectForRunner(event: Event): void {
     const pipelineId = +(event.target as HTMLSelectElement).value;
     if (this.selectedProject) {
@@ -258,6 +263,7 @@ private handlePipelineError(error: Error): void {
       this.selectedPipeline = pipelines.find(p => p.Id === pipelineId) || null;
     }
   }
+
   private async loadPipelinesForProject(projectId: string): Promise<void> {
     if (!projectId) {
       console.error('Project ID is undefined or empty');
@@ -339,7 +345,8 @@ private handlePipelineError(error: Error): void {
       });
     }
   }
-downloadHtmlReport(): void {
+
+  downloadHtmlReport(): void {
     if (!this.currentExecution || this.currentExecution.runId === 0) {
       this.statusMessage = 'No pipeline execution available to download report.';
       return;
@@ -405,6 +412,7 @@ downloadHtmlReport(): void {
       }
     });
   }
+
   private handleTestResultsError(error: any): void {
     if (error.message.includes('Pipeline execution for build 0 not found')) {
       this.statusMessage = 'Waiting for pipeline execution to complete...';
@@ -413,22 +421,25 @@ downloadHtmlReport(): void {
       this.stopStatusPolling();
     }
   }
-clearLocalState(): void {
-  this.stopStatusPolling();
-  this.pipelineStorageService.clearExecution();
-  this.currentExecution = null;
-  this.pipelineStatus.next({ isRunning: false });
-  this.statusMessage = 'Local state cleared. You can now trigger a new pipeline.';
-  this.currentTestResults = null;
-  this.loadProjects();
-}
+
+  clearLocalState(): void {
+    this.stopStatusPolling();
+    this.pipelineStorageService.clearExecution();
+    this.currentExecution = null;
+    this.pipelineStatus.next({ isRunning: false });
+    this.statusMessage = 'Local state cleared. You can now trigger a new pipeline.';
+    this.currentTestResults = null;
+    this.loadProjects();
+  }
+
   private stopStatusPolling(): void {
     if (this.statusPolling) {
       this.statusPolling.unsubscribe();
       this.statusPolling = undefined;
     }
   }
-getTestRowClass(status: string): string {
+
+  getTestRowClass(status: string): string {
     switch (status) {
       case 'PASSED': return 'table-success';
       case 'FAILED': return 'table-danger';
@@ -445,6 +456,7 @@ getTestRowClass(status: string): string {
       default: return 'badge bg-secondary';
     }
   }
+
   private loadTestResults(runId: number): void {
     if (!this.currentExecution) return;
 

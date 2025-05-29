@@ -22,7 +22,7 @@ export class TestResultsStateService {
       failedSteps: results.filter(r => r.Status === 'FAILED').length,
       overallPassRate: 0,
       features: this.calculateFeatureSummaries(results),
-      recentResults: results.slice(-5), // Keep last 5 results
+      recentResults: results, 
       lastUpdated: new Date(),
       runId: runId || 0,
       projectName: projectName || '',
@@ -32,14 +32,12 @@ export class TestResultsStateService {
       duration: 0
     };
 
-    // Calculate pass rate
+    //pass rate
     summary.overallPassRate = (summary.passedSteps / summary.totalSteps) * 100;
 
     this.testResultsSubject.next(summary);
     this.lastRunId = summary.runId;
     this.lastProjectName = summary.projectName;
-    
-    // Store in localStorage for persistence
     localStorage.setItem('lastTestResults', JSON.stringify(summary));
   }
 
@@ -58,8 +56,6 @@ export class TestResultsStateService {
       totalSteps: featureResults.length,
       passedSteps: featureResults.filter(r => r.Status === 'PASSED').length,
       failedSteps: featureResults.filter(r => r.Status === 'FAILED').length,
-      skippedSteps: 0,
-      duration: 0 // Calculate if you have duration info
     }));
   }
 
