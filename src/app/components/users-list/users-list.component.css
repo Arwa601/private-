@@ -1,10 +1,8 @@
-/* Main container styles */
 :host {
   display: block;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Page header styles - Simplified */
 .page-header {
   margin-bottom: 1rem;
   border-bottom: 1px solid #f0f0f0;
@@ -18,7 +16,6 @@
   margin-bottom: 0.25rem;
 }
 
-/* Card styles - Cleaner and lighter */
 .card {
   border: none;
   border-radius: 6px;
@@ -30,7 +27,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Mobile cards - Streamlined */
+
 .mobile-cards .card {
   border-left: 3px solid #3498db;
   margin-bottom: 0.5rem;
@@ -40,7 +37,6 @@
   border-left: 3px solid #f39c12;
 }
 
-/* Table styles - More compact */
 .table-responsive {
   border-radius: 6px;
   overflow: hidden;
@@ -69,7 +65,7 @@
   background-color: rgba(52, 152, 219, 0.05);
 }
 
-/* Project and pipeline styles */
+
 .project-summary .badge {
   font-size: 0.85rem;
   padding: 0.5em 0.75em;
@@ -79,7 +75,6 @@
   display: inline-block;
 }
 
-/* Avatar styles */
 .avatar {
   font-weight: 600;
   width: 40px;
@@ -87,19 +82,19 @@
   min-width: 40px;
 }
 
-/* Status badges */
+
 .badge {
   font-weight: 500;
   padding: 0.5em 0.75em;
 }
 
-/* Loading spinner */
+
 .spinner-border {
   width: 3rem;
   height: 3rem;
 }
 
-/* Responsive styles */
+
 @media (max-width: 768px) {
   .page-title {
     font-size: 1.5rem;
@@ -110,7 +105,7 @@
   }
 }
 
-/* Button styles - Consolidated */
+
 .btn {
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -139,7 +134,6 @@
   background-color: #bb2d3b;
 }
 
-/* Projects container styles */
 .projects-container {
   max-height: 300px;
   overflow-y: auto;
@@ -160,7 +154,6 @@
   border-radius: 5px;
 }
 
-/* Modal styles */
 .modal-dialog {
   max-width: 500px;
 }
@@ -176,7 +169,6 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Loading spinner */
 .spinner-container {
   display: flex;
   flex-direction: column;
@@ -197,7 +189,7 @@
   font-weight: 500;
 }
 
-/* Utility classes */
+
 .text-success {
   color: #198754 !important;
 }
@@ -222,7 +214,6 @@
   background-color: #fff3cd !important;
 }
 
-/* Status indicators */
 .status-dot {
   display: inline-block;
   width: 8px;
@@ -254,12 +245,11 @@
   }
 }
 
-/* Permissions dropdown styling */
+
 .permissions-dropdown {
   animation: fadeIn 0.2s ease-in-out;
 }
 
-/* Password display styling */
 .password-display {
   display: flex;
   align-items: center;

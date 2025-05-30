@@ -161,30 +161,7 @@
               </div>
             </div>
 
-            <!-- Test Details Table -->
-            <div class="table-responsive mt-3" *ngIf="results.details?.length">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Feature</th>
-                    <th>Scenario</th>
-                    <th>Status</th>
-                    <th>Error Message</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let test of results.details" [class]="getTestRowClass(test.Status)">
-                    <td>{{test.Feature}}</td>
-                    <td>{{test.Scenario}}</td>
-                    <td><span [class]="getTestStatusBadgeClass(test.Status)">{{test.Status}}</span></td>
-                    <td *ngIf="test.Status === 'FAILED'" class="text-danger small">
-                      {{test.ExceptionMessage}}
-                    </td>
-                    <td *ngIf="test.Status !== 'FAILED'">-</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+           
           </ng-container>
 
           <ng-template #noResults>

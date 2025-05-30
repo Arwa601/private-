@@ -227,7 +227,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
     this.pipelineStorageService.saveExecution({
       projectName,
       pipelineId,
-      pipelineName: this.currentExecution?.pipelineName || '', // Fixed shorthand property
+      pipelineName: this.currentExecution?.pipelineName || '', 
       runId: 0,
       status: { isRunning: true, currentStage: 'triggering pipeline...' }
     });
@@ -351,28 +351,7 @@ export class AzureDevopsComponent implements OnInit, OnDestroy {
       details: results
     };
 
-    this.updateStatusMessage();
   }
-
-  private updateStatusMessage(): void {
-    if (!this.currentTestResults) return;
-
-    this.statusMessage = `Test results updated: ${this.currentTestResults.passedCount} passed, ${this.currentTestResults.failedCount} failed.`;
-    
-    const failedTests = this.currentTestResults.details.filter(r => r.Status === 'FAILED');
-    if (failedTests.length > 0) {
-      this.statusMessage += '\nFailed tests:\n';
-      failedTests.forEach(test => {
-        if (test.Scenario) {
-          this.statusMessage += `- ${test.Feature}: ${test.Scenario}\n`;
-          if (test.ExceptionMessage) {
-            this.statusMessage += `  Error: ${test.ExceptionMessage}\n`;
-          }
-        }
-      });
-    }
-  }
-
   downloadHtmlReport(): void {
     if (!this.currentExecution || this.currentExecution.runId === 0) {
       this.statusMessage = 'No pipeline execution available to download report.';
