@@ -61,8 +61,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   statusFilter = 'ALL';
 
   timeDisplay: TimeDisplay = {
-    currentDateTime: '2025-05-30 09:46:07',
-    userLogin: 'Arwa601'
+    currentDateTime: '',
+    userLogin: ''
   };
   private timeUpdateInterval?: number;
 
@@ -139,7 +139,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private setupPaginator(): void {
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
-      this.paginator.page.subscribe((event: PageEvent) => this.onPageChange(event));
+      // Removed paginator.page.subscribe to avoid manual slicing
     }
   }
 
@@ -243,12 +243,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.allTestResults = results;
-    this.dataSource.data = results;
+    this.dataSource.data = results; // Set full dataset, let paginator handle slicing
     this.updateTestCounts(results);
 
     if (this.paginator) {
-      this.paginator.length = results.length;
-      this.paginator.firstPage();
+      this.paginator.length = results.length; // Set total length
+      this.paginator.firstPage(); // Ensure start on first page
     }
   }
 
@@ -294,24 +294,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.totalPassedCount = this.passedTestsCount;
     this.totalFailedCount = this.failedTestsCount;
     this.totalTestCount = this.totalTestsCount;
-    this.updateStatusMessage(results);
+
   }
 
-  private updateStatusMessage(results: TestResultsSummary): void {
-    this.statusMessage = `Test results loaded: ${results.passedSteps} passed, ${results.failedSteps} failed.`;
-    const failedTests = results.recentResults.filter(r => r.Status === 'FAILED');
-    if (failedTests.length > 0) {
-      this.statusMessage += '\nFailed tests:\n';
-      failedTests.forEach(test => {
-        if (test.Scenario) {
-          this.statusMessage += `- ${test.Feature}: ${test.Scenario}\n`;
-          if (test.ExceptionMessage) {
-            this.statusMessage += `  Error: ${test.ExceptionMessage}\n`;
-          }
-        }
-      });
-    }
-  }
+
 
   navigateToAzureDevOps(): void {
     this.router.navigate(['/app/dashboard/azure-devops'], {
@@ -321,23 +307,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onPageChange(event: PageEvent): void {
-    const startIndex = event.pageIndex * event.pageSize;
-    const endIndex = startIndex + event.pageSize;
-    let filteredData = this.allTestResults;
-    
-    if (this.statusFilter !== 'ALL') {
-      filteredData = this.allTestResults.filter(result => result.status === this.statusFilter);
-    }
-    
-    const currentPageData = filteredData.slice(startIndex, endIndex);
-    this.dataSource.data = currentPageData;
-    
-    const pagePassedCount = currentPageData.filter(result => result.status === 'PASSED').length;
-    const pageFailedCount = currentPageData.filter(result => result.status === 'FAILED').length;
-    
-    console.log(`Page ${event.pageIndex + 1}: Passed: ${pagePassedCount}, Failed: ${pageFailedCount}, Total: ${currentPageData.length}`);
-  }
+  
 
   filterByStatus(status: string): void {
     this.statusFilter = status;
@@ -347,11 +317,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       filteredData = this.allTestResults.filter(result => result.status === status);
     }
     
-    this.dataSource.data = filteredData;
+    this.dataSource.data = filteredData; 
     
     if (this.paginator) {
-      this.paginator.firstPage();
       this.paginator.length = filteredData.length;
+      this.paginator.firstPage(); 
     }
   }
 
@@ -369,7 +339,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     
     if (this.paginator) {
-      this.paginator.firstPage();
+      this.paginator.length = this.dataSource.data.length; 
+      this.paginator.firstPage(); 
     }
   }
 

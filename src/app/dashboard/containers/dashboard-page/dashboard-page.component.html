@@ -9,7 +9,7 @@
   <div class="time-user-display">
     <div class="time-info">
       <mat-icon>access_time</mat-icon>
-      <span>Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): {{ timeDisplay.currentDateTime }}</span>
+      <span>Current Date and Time : {{ timeDisplay.currentDateTime }}</span>
     </div>
     <div class="user-info">
       <mat-icon>person</mat-icon>
@@ -26,7 +26,7 @@
               color="primary" 
               (click)="navigateToAzureDevOps()"
               class="run-tests-button"
-              matTooltip="Go to Azure DevOps page to run tests">
+             >
         <mat-icon>play_arrow</mat-icon>
         <span>Run Tests</span>
       </button>
