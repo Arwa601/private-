@@ -14,7 +14,6 @@ import { AuthState, LoginRequest, StorageKeys, UserResponse } from '../../models
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/api/Auth`;
   
-  // BehaviorSubject to track authentication state throughout the app
   private authStateSubject = new BehaviorSubject<AuthState>({
     userId: null,
     firstName: null,
@@ -24,7 +23,6 @@ export class AuthService {
     isAuthenticated: false
   });
   
-  // Observable stream of auth state that components can subscribe to
   public authState$: Observable<AuthState> = this.authStateSubject.asObservable();
   
   constructor(
@@ -52,10 +50,7 @@ export class AuthService {
    * Logout user and clear session data
    */
   logout(): void {
-    // Clear local storage
     this.clearUserSession();
-    
-    // Navigate to login page
     this.router.navigate(['/login']);
   }
   

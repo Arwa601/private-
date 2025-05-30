@@ -85,7 +85,6 @@ downloadFromAzureDevOps(downloadUrl: string): Observable<{ type: 'blob' | 'auth'
         const contentType = response.headers.get('content-type');
         const data = response.body;
 
-        // Log response details for debugging
         console.log('Response details:', {
           contentType,
           dataLength: data?.byteLength,
@@ -96,10 +95,8 @@ downloadFromAzureDevOps(downloadUrl: string): Observable<{ type: 'blob' | 'auth'
           throw new Error('Empty response received');
         }
 
-        // If we received HTML
         if (contentType?.includes('text/html')) {
           const text = new TextDecoder().decode(data);
-          // If it contains login form or auth-related content
           if (text.toLowerCase().includes('login') || text.toLowerCase().includes('sign in')) {
             return {
               type: 'auth' as const,
@@ -108,7 +105,6 @@ downloadFromAzureDevOps(downloadUrl: string): Observable<{ type: 'blob' | 'auth'
           }
         }
 
-        // For zip or other binary content
         return {
           type: 'blob' as const,
           data: new Blob([data], { type: contentType || 'application/octet-stream' })

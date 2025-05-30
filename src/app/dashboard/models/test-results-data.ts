@@ -45,7 +45,7 @@ export interface TestResult {
   stepName: string;
   status: string;
   duration: number;
-  timestamp: Date;
+  timestamp: string;
   runId: number;
   exceptionType?: string;
   exceptionMessage?: string;

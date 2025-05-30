@@ -4,75 +4,80 @@
       <p class="title-text">Test Results Dashboard</p>
     </div>
   </mat-toolbar>
+
+  <!-- Time and User Display -->
+  <div class="time-user-display">
+    <div class="time-info">
+      <mat-icon>access_time</mat-icon>
+      <span>Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): {{ timeDisplay.currentDateTime }}</span>
+    </div>
+    <div class="user-info">
+      <mat-icon>person</mat-icon>
+      <span>Current User's Login: {{ timeDisplay.userLogin }}</span>
+    </div>
+  </div>
 </mat-card>
 
 <mat-card class="results-card">
   <mat-card-header>
     <mat-card-title>Test Results Summary</mat-card-title>
-    <div class="project-info" *ngIf="currentExecution?.projectName || selectedPipeline?.Name">
-      <span class="project-details">
-        <ng-container *ngIf="currentExecution?.projectName">
-          Project: {{ currentExecution?.projectName }}
-        </ng-container>
-        <ng-container *ngIf="currentExecution?.projectName && selectedPipeline?.Name">
-          |
-        </ng-container>
-        <ng-container *ngIf="selectedPipeline?.Name">
-          Pipeline: {{ selectedPipeline?.Name }}
-        </ng-container>
-      </span>
-    </div>
     <div class="header-actions">
-      <button mat-raised-button color="primary" (click)="triggerPipeline()">
+      <button mat-raised-button 
+              color="primary" 
+              (click)="navigateToAzureDevOps()"
+              class="run-tests-button"
+              matTooltip="Go to Azure DevOps page to run tests">
         <mat-icon>play_arrow</mat-icon>
         <span>Run Tests</span>
       </button>
-      <button mat-raised-button color="primary" (click)="loadTestResults()" [disabled]="isLoading">
+      <button mat-raised-button 
+              color="primary" 
+              (click)="refreshResults()"
+              [disabled]="isLoading">
         <mat-icon>refresh</mat-icon>
-        Refresh Results
+        <span>Refresh</span>
       </button>
     </div>
   </mat-card-header>
-  
+
   <mat-card-content>
     <div class="summary-stats">
-      <div class="stat-box passed clickable" [class.active]="statusFilter === 'PASSED'" (click)="filterByStatus('PASSED')">
-        <div class="stat-value">{{ passedTestsCount }}</div>
-        <div class="stat-label">Passed</div>
+      <div class="stat-box passed" [class.active]="statusFilter === 'PASSED'" (click)="filterByStatus('PASSED')">
+        <span class="stat-value">{{ totalPassedCount }}</span>
+        <span class="stat-label">Passed</span>
       </div>
-      <div class="stat-box failed clickable" [class.active]="statusFilter === 'FAILED'" (click)="filterByStatus('FAILED')">
-        <div class="stat-value">{{ failedTestsCount }}</div>
-        <div class="stat-label">Failed</div>
+      <div class="stat-box failed" [class.active]="statusFilter === 'FAILED'" (click)="filterByStatus('FAILED')">
+        <span class="stat-value">{{ totalFailedCount }}</span>
+        <span class="stat-label">Failed</span>
       </div>
-      <div class="stat-box total clickable" [class.active]="statusFilter === 'ALL'" (click)="filterByStatus('ALL')">
-        <div class="stat-value">{{ totalTestsCount }}</div>
-        <div class="stat-label">Total</div>
+      <div class="stat-box total" [class.active]="statusFilter === 'ALL'" (click)="filterByStatus('ALL')">
+        <span class="stat-value">{{ totalTestCount }}</span>
+        <span class="stat-label">Total</span>
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner" *ngIf="isLoading">
       <mat-spinner diameter="40"></mat-spinner>
-      <p class="loading-text">Loading test results...</p>
+      <span>Loading results...</span>
     </div>
 
-    <div *ngIf="error" class="error-container">
+    <div class="error-message" *ngIf="error">
       <mat-icon color="warn">error</mat-icon>
-      <p>{{ error }}</p>
-      <button mat-stroked-button color="primary" (click)="loadTestResults()">
-        <mat-icon>refresh</mat-icon>
-        Try Again
-      </button>
+      <span>{{ error }}</span>
     </div>
 
-    <div *ngIf="!isLoading && !error" class="table-container">
+    <div class="status-message" *ngIf="statusMessage">
+      <pre>{{ statusMessage }}</pre>
+    </div>
+
+    <div class="results-table-container" *ngIf="!isLoading && !error">
       <mat-form-field class="filter-field">
-        <mat-label>Filter results</mat-label>
-        <input matInput (keyup)="applyFilter($event)" placeholder="Type to search" #input>
+        <mat-label>Filter Results</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Type to filter...">
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
-      
+
       <table mat-table [dataSource]="dataSource" matSort class="results-table">
-        <!-- Existing columns -->
         <ng-container matColumnDef="feature">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Feature</th>
           <td mat-cell *matCellDef="let result">{{ result.feature }}</td>
@@ -86,7 +91,9 @@
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
           <td mat-cell *matCellDef="let result">
-            <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
+            <span class="status-badge" [ngClass]="getStatusClass(result.status)">
+              {{ result.status }}
+            </span>
           </td>
         </ng-container>
 
@@ -95,24 +102,27 @@
           <td mat-cell *matCellDef="let result">{{ result.exceptionType || '-' }}</td>
         </ng-container>
 
-        <!-- Add the new ExceptionMessage column -->
         <ng-container matColumnDef="exceptionMessage">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Error Message</th>
-          <td mat-cell *matCellDef="let result" class="error-message-cell">
-            <div class="error-message-content" [class.has-error]="result.exceptionMessage">
-              {{ result.exceptionMessage || '-' }}
-            </div>
-          </td>
+          <td mat-cell *matCellDef="let result">{{ result.exceptionMessage || '-' }}</td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             [ngClass]="{'failed-row': row.status === 'FAILED', 'passed-row': row.status === 'PASSED'}"
-            (click)="viewTestDetails(row)"
-            class="clickable-row"></tr>
+            (click)="viewTestDetails(row)">
+        </tr>
       </table>
 
-      <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
+      <mat-paginator 
+        #paginator
+        [length]="allTestResults.length" 
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [showFirstLastButtons]="true"
+        class="mat-mdc-paginator"
+        aria-label="Select page of test results">
+      </mat-paginator>
     </div>
   </mat-card-content>
 </mat-card>
