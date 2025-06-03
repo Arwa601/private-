@@ -1,4 +1,3 @@
-
 :host {
   display: block;
   height: 100%;
@@ -140,37 +139,37 @@
   text-decoration: none;
   
   &:hover {
-    color: #e2e2e2;
+    color: #3a98da;
     text-decoration: underline;
   }
 }
 
 .btn-primary {
-  background-color: #e2e2e2;
-  border-color: #e2e2e2;
+  background-color: #3a98da;
+  border-color: #3a98da;
   padding: 0.6rem 1rem;
   font-weight: 500;
-  color: #333;
+  color: #ffffff;
   
   &:hover {
-    background-color: #e8e8e8;
-    border-color: #e8e8e8;
-    color: #333;
+    background-color: #2d89cb;
+    border-color: #2d89cb;
+    color: #ffffff;
   }
   
   &:disabled {
-    background-color: #e2e2e2;
-    border-color: #F8F8F8;
+    background-color: #3a98da;
+    border-color: #3a98da;
     opacity: 0.65;
   }
 
   &:focus {
-    box-shadow: 0 0 0 0.25rem rgba(248, 248, 248, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(58, 152, 218, 0.25);
   }
 }
 
 .register-link {
-  color: #F8F8F8;
+  color: #3a98da;
   text-decoration: none;
   font-weight: 500;
   

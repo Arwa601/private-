@@ -27,7 +27,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-
 .mobile-cards .card {
   border-left: 3px solid #3498db;
   margin-bottom: 0.5rem;
@@ -65,7 +64,6 @@
   background-color: rgba(52, 152, 219, 0.05);
 }
 
-
 .project-summary .badge {
   font-size: 0.85rem;
   padding: 0.5em 0.75em;
@@ -82,18 +80,15 @@
   min-width: 40px;
 }
 
-
 .badge {
   font-weight: 500;
   padding: 0.5em 0.75em;
 }
 
-
 .spinner-border {
   width: 3rem;
   height: 3rem;
 }
-
 
 @media (max-width: 768px) {
   .page-title {
@@ -104,7 +99,6 @@
     margin-bottom: 1rem;
   }
 }
-
 
 .btn {
   font-weight: 500;
@@ -189,7 +183,6 @@
   font-weight: 500;
 }
 
-
 .text-success {
   color: #198754 !important;
 }
@@ -244,7 +237,6 @@
     box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
   }
 }
-
 
 .permissions-dropdown {
   animation: fadeIn 0.2s ease-in-out;

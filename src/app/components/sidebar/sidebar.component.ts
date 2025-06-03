@@ -25,10 +25,7 @@ export class SidebarComponent implements OnInit {
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    // Check if the current user is an admin
     this.isAdmin = this.authService.isAdmin();
-    
-    // Subscribe to auth state changes to update menu visibility
     this.authService.authState$.subscribe(authState => {
       this.isAdmin = authState.role === 'Admin';
     });

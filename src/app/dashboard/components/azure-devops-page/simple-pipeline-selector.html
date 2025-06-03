@@ -135,6 +135,14 @@
           <ng-container *ngIf="currentTestResults as results; else noResults">
             <!-- Test Summary Stats -->
             <div class="row mb-4">
+               <div class="col-md-4">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h6 class="card-title">Total</h6>
+                    <h3>{{results.totalCount || 0}}</h3>
+                  </div>
+                </div>
+              </div>
               <div class="col-md-4">
                 <div class="card bg-success text-white">
                   <div class="card-body text-center">
@@ -151,14 +159,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-4">
-                <div class="card bg-info text-white">
-                  <div class="card-body text-center">
-                    <h6 class="card-title">Total</h6>
-                    <h3>{{results.totalCount || 0}}</h3>
-                  </div>
-                </div>
-              </div>
+             
             </div>
 
            

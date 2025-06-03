@@ -9,11 +9,7 @@
   <div class="time-user-display">
     <div class="time-info">
       <mat-icon>access_time</mat-icon>
-      <span>Current Date and Time : {{ timeDisplay.currentDateTime }}</span>
-    </div>
-    <div class="user-info">
-      <mat-icon>person</mat-icon>
-      <span>Current User's Login: {{ timeDisplay.userLogin }}</span>
+      <span>Last Execution Time : {{ timeDisplay.currentDateTime }}</span>
     </div>
   </div>
 </mat-card>
@@ -28,7 +24,7 @@
               class="run-tests-button"
              >
         <mat-icon>play_arrow</mat-icon>
-        <span>Run Tests</span>
+        <span>Run New Tests</span>
       </button>
       <button mat-raised-button 
               color="primary" 
@@ -42,6 +38,10 @@
 
   <mat-card-content>
     <div class="summary-stats">
+      <div class="stat-box total" [class.active]="statusFilter === 'ALL'" (click)="filterByStatus('ALL')">
+        <span class="stat-value">{{ totalTestCount }}</span>
+        <span class="stat-label">Total</span>
+      </div>
       <div class="stat-box passed" [class.active]="statusFilter === 'PASSED'" (click)="filterByStatus('PASSED')">
         <span class="stat-value">{{ totalPassedCount }}</span>
         <span class="stat-label">Passed</span>
@@ -50,10 +50,7 @@
         <span class="stat-value">{{ totalFailedCount }}</span>
         <span class="stat-label">Failed</span>
       </div>
-      <div class="stat-box total" [class.active]="statusFilter === 'ALL'" (click)="filterByStatus('ALL')">
-        <span class="stat-value">{{ totalTestCount }}</span>
-        <span class="stat-label">Total</span>
-      </div>
+      
     </div>
 
     <div class="loading-spinner" *ngIf="isLoading">

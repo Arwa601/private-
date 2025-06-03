@@ -18,7 +18,6 @@ export class UserService {
         return this.http.get<QAUser[]>(this.usersApiUrl).pipe(
             map((users: QAUser[]) => {
                 console.log('API returned users:', users);
-
                 users.forEach((user: QAUser) => {
                     if (!user.Id) {
                         console.warn(`User ${user.Firstname} ${user.Lastname} (${user.Email}) has no ID in API response`);
@@ -33,6 +32,13 @@ export class UserService {
     removeUser(userId: string): Observable<any> {
         console.log(`Removing user with ID: ${userId}`);
         return this.http.delete(`${this.baseApiUrl}/remove-user/${userId}`);
+    }
+    addUserProject(userId: string, projectId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseApiUrl}/users/${userId}/project-add/${projectId}`, {});
+     }
+
+    removeUserProject(userId: string, projectId: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseApiUrl}/users/${userId}/project-delete/${projectId}`);
     }
 
     updatePermissions(userId: string, pipelineId: number, permissions: any): Observable<any> {
@@ -72,17 +78,5 @@ export class UserService {
         });
     }
 
-    resetUserPassword(userId: string): Observable<any> {
-        if (!userId) {
-            console.error('Invalid userId provided to resetUserPassword:', userId);
-            throw new Error('User ID is required for resetUserPassword');
-        }
-
-        const url = `${this.baseApiUrl}/reset-password/${userId}`;
-        console.log(`Sending POST request to reset password: ${url}`);
-
-        return this.http.post(url, {}, {
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
+  
 }

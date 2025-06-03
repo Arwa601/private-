@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { UserService } from '../../services/admin.role/user.service';
-import { QAUser, QAPipeline, QAPipelinePermission } from '../../models/qa-user.model';
+import { QAUser, QAPipeline, QAPipelinePermission, QAProject } from '../../models/qa-user.model';
 import { CommonModule } from '@angular/common';
 import { DataTable } from 'simple-datatables';
 import { PermissionsModalComponent } from '../permissions-modal/permissions-modal.component';
@@ -8,7 +8,6 @@ import { RouterModule } from '@angular/router';
 import { Subject, takeUntil, timer } from 'rxjs';
 declare const Swal: any;
 
-// Extend QAUser interface to include showPassword property
 interface ExtendedQAUser extends QAUser {
   showPassword: boolean;
 }
@@ -43,7 +42,11 @@ export class UserListComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private autoRefreshSubscription: any = null;
   isAutoRefreshEnabled = false;
-  selectedUser: ExtendedQAUser | null = null;
+
+  // New properties for updating projects
+  showUpdateProjectsModal = false;
+  currentUserForProjects: ExtendedQAUser | null = null;
+  availableProjects: QAProject[] = []; // Mocked list of all projects (assumed to be fetched)
 
   constructor(
     private userService: UserService
@@ -77,6 +80,7 @@ export class UserListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     console.log('UserListComponent initialized');
     this.loadUsers();
+    this.loadAvailableProjects(); 
   }
 
   ngAfterViewInit(): void {
@@ -201,6 +205,16 @@ export class UserListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showToast('Failed to load users. Please try again.', 'danger');
       }
     });
+  }
+
+  private loadAvailableProjects(): void {
+    // Mocked list of projects (in a real app, this would come from an API)
+    this.availableProjects = [
+      { Id: 'proj1', Name: 'Project Alpha', Pipelines: [] },
+      { Id: 'proj2', Name: 'Project Beta', Pipelines: [] },
+      { Id: 'proj3', Name: 'Project Gamma', Pipelines: [] },
+      { Id: 'proj4', Name: 'Project Delta', Pipelines: [] }
+    ];
   }
 
   applyFilters(): void {
@@ -584,27 +598,94 @@ export class UserListComponent implements OnInit, AfterViewInit, OnDestroy {
     return needsQuotes ? `"${escaped}"` : escaped;
   }
 
-  showUserDetails(user: ExtendedQAUser): void {
-    console.log('Showing details for user:', user);
-    this.selectedUser = user;
+  onUpdateProjectsClick(user: ExtendedQAUser): void {
+    if (!user.Id) {
+      this.showToast('Cannot update projects: User ID missing.', 'warning');
+      return;
+    }
 
-    const modal = new (window as any).bootstrap.Modal(document.getElementById('userDetailsModal'));
-    modal.show();
+    this.currentUserForProjects = user;
+    this.showUpdateProjectsModal = true;
+  }
 
-    document.getElementById('userDetailsModal')?.addEventListener('hidden.bs.modal', () => {
-      this.selectedUser = null;
+  closeUpdateProjectsModal(): void {
+    this.showUpdateProjectsModal = false;
+    this.currentUserForProjects = null;
+  }
+
+  // New method to handle the select change event
+  onAddProject(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const projectId = target.value;
+
+    // Reset the select to the default option after selection
+    target.value = '';
+
+    if (projectId) {
+      this.addProjectToUser(projectId);
+    }
+  }
+
+  // Add a project to the user
+  addProjectToUser(projectId: string): void {
+    if (!this.currentUserForProjects || !this.currentUserForProjects.Id) {
+      this.showToast('Cannot add project: User not selected.', 'danger');
+      return;
+    }
+
+    const userId = this.currentUserForProjects.Id;
+    const alreadyAssigned = this.currentUserForProjects.Projects.some(p => p.Id === projectId);
+
+    if (alreadyAssigned) {
+      this.showToast('Project is already assigned to the user.', 'warning');
+      return;
+    }
+
+    this.userService.addUserProject(userId, projectId).subscribe({
+      next: () => {
+        const project = this.availableProjects.find(p => p.Id === projectId);
+        if (project) {
+          this.currentUserForProjects!.Projects.push(project);
+          this.users = [...this.users]; // Trigger change detection
+          this.applyFilters();
+          this.showToast(`Project ${project.Name} added to user.`, 'success');
+        }
+      },
+      error: (error) => {
+        console.error('Error adding project:', error);
+        this.showToast('Failed to add project. Please try again.', 'danger');
+      }
     });
   }
 
-  onEditPermissionsFromDetails(user: ExtendedQAUser, project: any, pipeline: QAPipeline): void {
-    const detailsModal = (window as any).bootstrap.Modal.getInstance(document.getElementById('userDetailsModal'));
-    if (detailsModal) {
-      detailsModal.hide();
+  // Remove a project from the user
+  removeProjectFromUser(projectId: string): void {
+    if (!this.currentUserForProjects || !this.currentUserForProjects.Id) {
+      this.showToast('Cannot remove project: User not selected.', 'danger');
+      return;
     }
 
-    setTimeout(() => {
-      this.onEditPermissionsClick(user, project, pipeline);
-    }, 300);
+    const userId = this.currentUserForProjects.Id;
+    const projectIndex = this.currentUserForProjects.Projects.findIndex(p => p.Id === projectId);
+
+    if (projectIndex === -1) {
+      this.showToast('Project not assigned to the user.', 'warning');
+      return;
+    }
+
+    this.userService.removeUserProject(userId, projectId).subscribe({
+      next: () => {
+        this.currentUserForProjects!.Projects.splice(projectIndex, 1);
+        this.users = [...this.users]; // Trigger change detection
+        this.applyFilters();
+        const project = this.availableProjects.find(p => p.Id === projectId);
+        this.showToast(`Project ${project?.Name} removed from user.`, 'success');
+      },
+      error: (error) => {
+        console.error('Error removing project:', error);
+        this.showToast('Failed to remove project. Please try again.', 'danger');
+      }
+    });
   }
 
   showPermissionsMenu(user: ExtendedQAUser, event: MouseEvent): void {
@@ -722,7 +803,7 @@ export class UserListComponent implements OnInit, AfterViewInit, OnDestroy {
     footerDiv.className = 'card-footer text-end';
 
     const closeButton = document.createElement('button');
-    closeButton.className = 'btn btn-secondary btn-sm';
+    closeButton.className = 'btn btn-sm btn-outline-secondary';
     closeButton.textContent = 'Close';
     closeButton.onclick = () => {
       document.body.removeChild(menu);

@@ -1,4 +1,3 @@
-<!-- Page Header -->
 <div class="page-header d-flex justify-content-between align-items-center mb-3">
   <div>
     <h2 class="page-title mb-0">Users Management</h2>
@@ -11,7 +10,6 @@
   </div>
 </div>
 
-<!-- Search and Filter Controls -->
 <div class="card mb-3 shadow-sm">
   <div class="card-body p-2">
     <div class="row g-2 align-items-center">
@@ -67,9 +65,7 @@
   </div>
 </div>
 
-<!-- Feedback Messages -->
 <div class="mb-3">
-  <!-- Search Results Info -->
   <div *ngIf="!isLoading && filteredUsers.length > 0" class="d-flex justify-content-between align-items-center small text-muted">
     <div>
       Showing {{ filteredUsers.length }} of {{ users.length }} users
@@ -84,14 +80,12 @@
     </div>
   </div>
 
-  <!-- Loading Spinner -->
   <div *ngIf="isLoading" class="text-center py-4">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
   </div>
 
-  <!-- No Results Messages -->
   <div *ngIf="!isLoading && users.length === 0" class="alert alert-info py-2">
     <div class="d-flex">
       <i class="bi bi-info-circle me-2"></i>
@@ -107,7 +101,6 @@
   </div>
 </div>
 
-<!-- Desktop Table View -->
 <div *ngIf="!isLoading && !isMobile && users.length > 0" class="table-responsive mb-3">
   <table class="table table-hover align-middle table-sm">
     <thead class="table-light">
@@ -175,9 +168,9 @@
           <div class="btn-group btn-group-sm">
             <button class="btn btn-outline-secondary"
                     [disabled]="!user.Id"
-                    title="View details"
-                    (click)="showUserDetails(user)">
-              <i class="bi bi-eye"></i>
+                    title="Update projects list"
+                    (click)="onUpdateProjectsClick(user)">
+              <i class="bi bi-folder-plus"></i>
             </button>
             <button class="btn btn-outline-primary"
                     [disabled]="!user.Id || !user.Projects || user.Projects.length === 0"
@@ -198,7 +191,6 @@
   </table>
 </div>
 
-<!-- Mobile Card View -->
 <div *ngIf="!isLoading && isMobile && users.length > 0" class="mobile-cards">
   <div *ngFor="let user of filteredUsers" class="card mb-2 shadow-sm" [ngClass]="{'border-warning': !user.Id}">
     <div class="card-body p-2">
@@ -227,8 +219,8 @@
         <div class="btn-group btn-group-sm">
           <button class="btn btn-outline-secondary"
                   [disabled]="!user.Id"
-                  (click)="showUserDetails(user)">
-            <i class="bi bi-eye"></i>
+                  (click)="onUpdateProjectsClick(user)">
+            <i class="bi bi-folder-plus"></i>
           </button>
           <button class="btn btn-outline-primary"
                   [disabled]="!user.Id || !user.Projects || user.Projects.length === 0"
@@ -259,7 +251,6 @@
   </div>
 </div>
 
-<!-- Permissions Modal -->
 <app-permissions-modal
   [visible]="showPermissionsModal"
   [pipelineName]="currentPipeline?.Name || ''"
@@ -270,122 +261,48 @@
   (save)="savePermissions($event)">
 </app-permissions-modal>
 
-<!-- User Details Modal -->
-<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+<div class="modal fade" id="updateProjectsModal" tabindex="-1" aria-labelledby="updateProjectsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" *ngIf="selectedUser">
+    <div class="modal-content" *ngIf="currentUserForProjects">
       <div class="modal-header py-2">
-        <h5 class="modal-title" id="userDetailsModalLabel">
-          <i class="bi bi-person me-2 text-primary"></i>
-          User Details
+        <h5 class="modal-title" id="updateProjectsModalLabel">
+          <i class="bi bi-folder-plus me-2 text-primary"></i>
+          Update Projects for {{ currentUserForProjects.Firstname }} {{ currentUserForProjects.Lastname }}
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-3">
-        <div class="d-flex align-items-center mb-3">
-          <div class="avatar rounded-circle text-bg-primary me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.2rem;">
-            {{ selectedUser.Firstname.charAt(0) }}{{ selectedUser.Lastname.charAt(0) }}
+        <div class="mb-3">
+          <h6 class="mb-2">
+            <i class="bi bi-folder me-1"></i> Current Projects
+          </h6>
+          <div *ngIf="currentUserForProjects.Projects.length === 0" class="text-muted small">
+            No projects assigned.
           </div>
-          <div>
-            <h5 class="mb-0">{{ selectedUser.Firstname }} {{ selectedUser.Lastname }}</h5>
-            <p class="text-muted mb-0 small">{{ selectedUser.Email }}</p>
-            <div class="mt-1">
-              <span class="badge bg-light text-dark border me-2">{{ selectedUser.Role }}</span>
-              <span class="badge" [ngClass]="selectedUser.Status === 'Active' ? 'bg-success' : 'bg-secondary'">
-                {{ selectedUser.Status }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Password Section -->
-        <div class="card mb-3">
-          <div class="card-header bg-light py-2">
-            <h6 class="mb-0">
-              <i class="bi bi-key me-1"></i> Password
-            </h6>
-          </div>
-          <div class="card-body p-2">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <span class="text-muted small">
-                  {{ selectedUser.showPassword ? selectedUser.Password || 'No password set' : '••••••••' }}
-                </span>
-              </div>
-              <button class="btn btn-sm btn-link p-0" (click)="togglePasswordVisibility(selectedUser)">
-                <i class="bi" [ngClass]="selectedUser.showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          <div class="list-group" *ngIf="currentUserForProjects.Projects.length > 0">
+            <div *ngFor="let project of currentUserForProjects.Projects" class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ project.Name }}</span>
+              <button class="btn btn-sm btn-outline-danger" (click)="removeProjectFromUser(project.Id)">
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Access Details Section -->
-        <div class="card mb-0">
-          <div class="card-header bg-light py-2">
-            <h6 class="mb-0">
-              <i class="bi bi-shield-lock me-1"></i>Access Details
-            </h6>
-          </div>
-          <div class="card-body p-2">
-            <p *ngIf="!selectedUser.Projects || selectedUser.Projects.length === 0" class="text-muted small mb-0">
-              No projects assigned to this user.
-            </p>
-            <div *ngIf="selectedUser.Projects && selectedUser.Projects.length > 0" class="projects-container small">
-              <div *ngFor="let project of selectedUser.Projects" class="mb-2">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-folder me-1 text-primary"></i>
-                  <strong>{{ project.Name }}</strong>
-                  <span class="ms-1 badge bg-light text-dark border">{{ project.Pipelines.length }} pipelines</span>
-                </div>
-                <div class="table-responsive mt-1" *ngIf="project.Pipelines.length > 0">
-                  <table class="table table-sm table-bordered mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Pipeline</th>
-                        <th class="text-center" title="View History">View</th>
-                        <th class="text-center" title="Trigger Pipeline">Run</th>
-                        <th class="text-center" title="View Results">Results</th>
-                        <th class="text-center" title="Download Reports">Reports</th>
-                        <th class="text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let pipeline of project.Pipelines">
-                        <td class="small">{{ pipeline.Name }}</td>
-                        <td class="text-center">
-                          <i class="bi"
-                             [ngClass]="pipeline.Permissions.CanViewHistory ? 'bi-check text-success' : 'bi-x text-danger'"></i>
-                        </td>
-                        <td class="text-center">
-                          <i class="bi"
-                             [ngClass]="pipeline.Permissions.CanTrigger ? 'bi-check text-success' : 'bi-x text-danger'"></i>
-                        </td>
-                        <td class="text-center">
-                          <i class="bi"
-                             [ngClass]="pipeline.Permissions.CanViewResults ? 'bi-check text-success' : 'bi-x text-danger'"></i>
-                        </td>
-                        <td class="text-center">
-                          <i class="bi"
-                             [ngClass]="pipeline.Permissions.CanDownloadReport ? 'bi-check text-success' : 'bi-x text-danger'"></i>
-                        </td>
-                        <td class="text-center">
-                          <button class="btn btn-sm btn-outline-primary"
-                                  (click)="onEditPermissionsFromDetails(selectedUser, project, pipeline)"
-                                  title="Edit permissions">
-                            <i class="bi bi-pencil-square"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div>
+          <h6 class="mb-2">
+            <i class="bi bi-plus-circle me-1"></i> Add New Project
+          </h6>
+          <select class="form-select" (change)="onAddProject($event)">
+  <option value="" disabled selected>Select a project...</option>
+  <option *ngFor="let project of availableProjects" [value]="project.Id">
+    {{ project.Name }}
+  </option>
+</select>
         </div>
       </div>
       <div class="modal-footer py-2">
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" (click)="closeUpdateProjectsModal()">Close</button>
       </div>
     </div>
   </div>
